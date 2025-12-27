@@ -1,0 +1,1931 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>效率大师 - 城市交通网优化</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        body {
+            background: linear-gradient(135deg, #1a2a6c, #b21f1f, #fdbb2d);
+            color: #fff;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        header {
+            text-align: center;
+            padding: 20px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 15px;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+        }
+        h1 {
+            font-size: 2.8rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+        }
+        .subtitle {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+        .game-area {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+        .map-container {
+            flex: 1;
+            min-width: 700px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 15px;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+            position: relative;
+        }
+        #gameCanvas {
+            background: #0a1f3a;
+            border-radius: 10px;
+            display: block;
+            margin: 0 auto;
+            cursor: default;
+        }
+        .control-panel {
+            flex: 0 0 300px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        .stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+        .stat-card {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+        }
+        .stat-value {
+            font-size: 1.8rem;
+            font-weight: bold;
+            margin-top: 5px;
+        }
+        .budget {
+            color: #4cd964;
+        }
+        .avg-time {
+            color: #5ac8fa;
+        }
+        .congestion {
+            color: #ff3b30;
+        }
+        .score {
+            color: #ffcc00;
+        }
+        .tools {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .tool-btn {
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.15);
+            color: white;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .tool-btn:hover {
+            background: rgba(255, 255, 255, 0.25);
+            transform: translateY(-2px);
+        }
+        .tool-btn.active {
+            background: rgba(74, 144, 226, 0.7);
+            box-shadow: 0 0 10px rgba(74, 144, 226, 0.5);
+        }
+        .tool-icon {
+            font-size: 1.2rem;
+        }
+        .cost {
+            margin-left: auto;
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+        .objectives {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 15px;
+            border-radius: 10px;
+        }
+        .objective {
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .objective-progress {
+            height: 8px;
+            flex: 1;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        .objective-bar {
+            height: 100%;
+            border-radius: 4px;
+            transition: width 0.5s ease;
+        }
+        .objective-1 .objective-bar {
+            background: #5ac8fa;
+        }
+        .objective-2 .objective-bar {
+            background: #ff3b30;
+        }
+        .objective-3 .objective-bar {
+            background: #4cd964;
+        }
+        .game-info {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 15px;
+            border-radius: 10px;
+            font-size: 0.9rem;
+            line-height: 1.5;
+        }
+        .rating {
+            text-align: center;
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin-top: 10px;
+            text-shadow: 0 0 10px rgba(255, 204, 0, 0.7);
+        }
+        .instructions {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 20px;
+            margin-top: 20px;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+        }
+        .instructions h2 {
+            margin-bottom: 15px;
+            text-align: center;
+        }
+        .instructions ul {
+            padding-left: 20px;
+            margin-bottom: 15px;
+        }
+        .instructions li {
+            margin-bottom: 8px;
+        }
+        .highlight {
+            color: #ffcc00;
+            font-weight: bold;
+        }
+        .road-options {
+            display: none;
+            position: absolute;
+            background: rgba(0, 0, 0, 0.9);
+            border-radius: 8px;
+            padding: 10px;
+            z-index: 100;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .road-option {
+            padding: 8px 12px;
+            margin: 5px 0;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.2s;
+            color: white;
+            font-size: 0.9rem;
+        }
+        .road-option:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+        .upgrade-effect {
+            position: absolute;
+            font-size: 1.2rem;
+            font-weight: bold;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            pointer-events: none;
+            animation: floatUp 1.5s ease-out forwards;
+        }
+        .node-highlight {
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            border: 3px solid #5ac8fa;
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 60;
+            animation: pulse 1.5s infinite;
+        }
+        .node-candidate {
+            position: absolute;
+            width: 35px;
+            height: 35px;
+            border: 2px solid #4cd964;
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 55;
+            animation: candidatePulse 1s infinite;
+        }
+        .time-indicator {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 10px 15px;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .time-period {
+            font-weight: bold;
+            color: #ffcc00;
+        }
+        .data-panel {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 20px;
+            margin-top: 20px;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+        }
+        .data-panel h2 {
+            margin-bottom: 15px;
+            text-align: center;
+        }
+        .data-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+        .data-card {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 15px;
+            border-radius: 10px;
+        }
+        .data-title {
+            font-size: 1rem;
+            margin-bottom: 10px;
+            color: #aaa;
+        }
+        .data-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+        .data-trend {
+            font-size: 0.9rem;
+            margin-top: 5px;
+        }
+        .trend-up {
+            color: #4cd964;
+        }
+        .trend-down {
+            color: #ff3b30;
+        }
+        .trend-neutral {
+            color: #aaa;
+        }
+        .road-type-selector {
+            display: none;
+            position: absolute;
+            background: rgba(0, 0, 0, 0.9);
+            border-radius: 8px;
+            padding: 10px;
+            z-index: 100;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .road-type-option {
+            padding: 8px 12px;
+            margin: 5px 0;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.2s;
+            color: white;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .road-type-option:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+        .road-type-icon {
+            font-size: 1.2rem;
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.3); opacity: 0.7; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        @keyframes candidatePulse {
+            0% { transform: scale(1); opacity: 0.6; }
+            50% { transform: scale(1.1); opacity: 0.8; }
+            100% { transform: scale(1); opacity: 0.6; }
+        }
+        @keyframes floatUp {
+            0% {
+                opacity: 1;
+                transform: translateY(0);
+            }
+            100% {
+                opacity: 0;
+                transform: translateY(-50px);
+            }
+        }
+        @media (max-width: 1100px) {
+            .game-area {
+                flex-direction: column;
+            }
+            .map-container {
+                min-width: 100%;
+            }
+            .control-panel {
+                flex: 0 0 auto;
+            }
+            .data-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>效率大师</h1>
+            <p class="subtitle">优化城市交通网络，在有限预算内最大化系统效率</p>
+        </header>
+
+        <div class="game-area">
+            <div class="map-container">
+                <canvas id="gameCanvas" width="700" height="600"></canvas>
+                <div class="time-indicator">
+                    <span>时间: <span id="game-hour">8</span>:00</span>
+                    <span class="time-period" id="time-period">早高峰</span>
+                </div>
+                <div class="road-options" id="roadOptions">
+                    <!-- 道路升级选项将通过JavaScript动态生成 -->
+                </div>
+                <div class="road-type-selector" id="roadTypeSelector">
+                    <!-- 道路类型选择将通过JavaScript动态生成 -->
+                </div>
+            </div>
+
+            <div class="control-panel">
+                <div class="stats">
+                    <div class="stat-card">
+                        <div>预算</div>
+                        <div class="stat-value budget" id="budget">15000</div>
+                    </div>
+                    <div class="stat-card">
+                        <div>平均通勤时间</div>
+                        <div class="stat-value avg-time" id="avg-time">60s</div>
+                    </div>
+                    <div class="stat-card">
+                        <div>最拥堵路段</div>
+                        <div class="stat-value congestion" id="congestion">85%</div>
+                    </div>
+                    <div class="stat-card">
+                        <div>综合得分</div>
+                        <div class="stat-value score" id="score">0</div>
+                    </div>
+                </div>
+
+                <div class="tools">
+                    <button class="tool-btn" id="build-road">
+                        <span class="tool-icon">🛣️</span>
+                        <span>建造道路</span>
+                    </button>
+                    <button class="tool-btn" id="upgrade-road">
+                        <span class="tool-icon">🔼</span>
+                        <span>升级道路</span>
+                    </button>
+                    <button class="tool-btn" id="add-bus">
+                        <span class="tool-icon">🚌</span>
+                        <span>添加公交线路</span>
+                        <span class="cost">-800</span>
+                    </button>
+                    <button class="tool-btn" id="add-traffic-light">
+                        <span class="tool-icon">🚦</span>
+                        <span>设置智能信号灯</span>
+                        <span class="cost">-300</span>
+                    </button>
+                    <button class="tool-btn" id="reset">
+                        <span class="tool-icon">🔄</span>
+                        <span>重置游戏</span>
+                    </button>
+                </div>
+
+                <div class="objectives">
+                    <h3>目标完成度</h3>
+                    <div class="objective objective-1">
+                        <span>平均通勤时间最短</span>
+                        <div class="objective-progress">
+                            <div class="objective-bar" id="obj1-bar" style="width: 30%"></div>
+                        </div>
+                    </div>
+                    <div class="objective objective-2">
+                        <span>最拥堵路段通行时间</span>
+                        <div class="objective-progress">
+                            <div class="objective-bar" id="obj2-bar" style="width: 45%"></div>
+                        </div>
+                    </div>
+                    <div class="objective objective-3">
+                        <span>预算结余最多</span>
+                        <div class="objective-progress">
+                            <div class="objective-bar" id="obj3-bar" style="width: 60%"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="game-info">
+                    <p>当前评级: <span class="rating" id="rating">C级</span></p>
+                    <p>游戏时间: <span id="game-time">0</span>秒</p>
+                    <p>已服务车辆: <span id="vehicles-served">0</span></p>
+                    <p>道路总数: <span id="roads-count">0</span></p>
+                    <p>公交线路: <span id="bus-routes-count">0</span></p>
+                    <p>网络连通性: <span id="network-connectivity">0%</span></p>
+                </div>
+            </div>
+        </div>
+
+        <div class="data-panel">
+            <h2>交通数据</h2>
+            <div class="data-grid">
+                <div class="data-card">
+                    <div class="data-title">经济影响</div>
+                    <div class="data-value" id="economic-impact">中等</div>
+                    <div class="data-trend trend-up" id="economic-trend">+5% 交通效率提升</div>
+                </div>
+                <div class="data-card">
+                    <div class="data-title">交通流量</div>
+                    <div class="data-value" id="traffic-volume">85%</div>
+                    <div class="data-trend trend-down" id="traffic-trend">-10% 较上时段</div>
+                </div>
+                <div class="data-card">
+                    <div class="data-title">公共交通使用率</div>
+                    <div class="data-value" id="public-transit">25%</div>
+                    <div class="data-trend trend-up" id="transit-trend">+5% 新增线路</div>
+                </div>
+                <div class="data-card">
+                    <div class="data-title">环境友好度</div>
+                    <div class="data-value" id="environment">中等</div>
+                    <div class="data-trend trend-up" id="environment-trend">+3% 减少碳排放</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="instructions">
+            <h2>游戏指南</h2>
+            <ul>
+                <li>使用<span class="highlight">建造道路</span>、<span class="highlight">升级道路</span>、<span class="highlight">添加公交线路</span>和<span class="highlight">设置智能信号灯</span>来优化交通网络</li>
+                <li>道路类型：单车道 → 双车道 → 四车道</li>
+                <li><span class="highlight">公交线路必须建立在已有道路上</span>，道路等级越高，公交效率越好</li>
+                <li>在<span class="highlight">有限预算</span>下平衡三个目标：平均通勤时间、最拥堵路段通行时间和预算结余</li>
+                <li>注意：升级一条道路可能导致邻近道路成为新的瓶颈</li>
+                <li>不同区域在不同时段的车流量需求不同，需要动态调整策略</li>
+                <li>获得<span class="highlight">S级</span>评级来证明你的效率大师能力！</li>
+            </ul>
+            <p>提示：点击两个节点建造道路，点击现有道路进行升级，点击两个节点建立公交线路，点击路口设置信号灯。</p>
+        </div>
+    </div>
+
+    <script>
+        // 游戏主逻辑
+        document.addEventListener('DOMContentLoaded', function() {
+            const canvas = document.getElementById('gameCanvas');
+            const ctx = canvas.getContext('2d');
+            const roadOptions = document.getElementById('roadOptions');
+            const roadTypeSelector = document.getElementById('roadTypeSelector');
+
+            // 游戏状态
+            let gameState = {
+                budget: 15000,
+                avgCommuteTime: 60,
+                maxCongestion: 85,
+                score: 0,
+                gameTime: 0,
+                vehiclesServed: 0,
+                rating: 'C级',
+                selectedTool: null,
+                buildFromNode: null,
+                selectedRoadType: null,
+                objectives: {
+                    avgTime: 25,
+                    congestion: 20,
+                    budget: 8000
+                },
+                timeOfDay: 8, // 8:00 AM
+                trafficPattern: 'morning', // morning, day, evening, night
+                economicImpact: '中等',
+                trafficVolume: 85,
+                publicTransit: 25,
+                environment: '中等'
+            };
+
+            // 节点类型
+            const NODE_TYPES = {
+                RESIDENTIAL: { color: '#4cd964', name: '居民区' },
+                COMMERCIAL: { color: '#5ac8fa', name: '商业区' },
+                INDUSTRIAL: { color: '#ff9500', name: '工业区' },
+                SCHOOL: { color: '#af52de', name: '学校' },
+                HOSPITAL: { color: '#ff2d55', name: '医院' }
+            };
+
+            // 道路等级
+            const ROAD_LEVELS = {
+                SINGLE: {
+                    speed: 1,
+                    capacity: 5,
+                    color: '#aaaaaa',
+                    cost: 200,
+                    width: 2,
+                    name: '单车道',
+                    icon: '🛣️'
+                },
+                DOUBLE: {
+                    speed: 2,
+                    capacity: 10,
+                    color: '#ffcc00',
+                    cost: 500,
+                    width: 4,
+                    name: '双车道',
+                    icon: '🛣️🛣️'
+                },
+                QUAD: {
+                    speed: 4,
+                    capacity: 20,
+                    color: '#ff3b30',
+                    cost: 1000,
+                    width: 6,
+                    name: '四车道',
+                    icon: '🛣️🛣️🛣️🛣️'
+                }
+            };
+
+            // 游戏元素
+            let nodes = [];
+            let roads = [];
+            let vehicles = [];
+            let trafficLights = [];
+            let busRoutes = [];
+            let gameIntervals = [];
+            let selectionLine = null;
+            let nodeHighlight = null;
+            let nodeCandidates = [];
+
+            // 初始化游戏
+            function initGame() {
+                // 清除所有定时器
+                clearAllIntervals();
+
+                // 重置游戏状态
+                gameState = {
+                    budget: 15000,
+                    avgCommuteTime: 60,
+                    maxCongestion: 85,
+                    score: 0,
+                    gameTime: 0,
+                    vehiclesServed: 0,
+                    rating: 'C级',
+                    selectedTool: null,
+                    buildFromNode: null,
+                    selectedRoadType: null,
+                    objectives: {
+                        avgTime: 25,
+                        congestion: 20,
+                        budget: 8000
+                    },
+                    timeOfDay: 8,
+                    trafficPattern: 'morning',
+                    economicImpact: '中等',
+                    trafficVolume: 85,
+                    publicTransit: 25,
+                    environment: '中等'
+                };
+
+                // 重置游戏元素
+                nodes = [];
+                roads = [];
+                vehicles = [];
+                trafficLights = [];
+                busRoutes = [];
+                selectionLine = null;
+                nodeHighlight = null;
+                nodeCandidates = [];
+
+                // 创建节点
+                createNodes();
+
+                // 创建初始道路
+                createInitialRoads();
+
+                // 开始游戏循环
+                gameIntervals.push(setInterval(updateGame, 100));
+                gameIntervals.push(setInterval(spawnVehicles, 1200));
+                gameIntervals.push(setInterval(updateStats, 1000));
+                gameIntervals.push(setInterval(updateTimeOfDay, 5000));
+
+                // 初始化统计信息
+                updateRoadsCount();
+                updateBusRoutesCount();
+                updateNetworkConnectivity();
+
+                // 重置UI状态
+                document.querySelectorAll('.tool-btn').forEach(btn => {
+                    btn.classList.remove('active');
+                });
+                gameState.selectedTool = null;
+                gameState.buildFromNode = null;
+                gameState.selectedRoadType = null;
+                hideRoadOptions();
+                hideRoadTypeSelector();
+                clearSelectionLine();
+                clearNodeHighlight();
+                clearNodeCandidates();
+
+                // 更新UI
+                updateTimeUI();
+                updateDataPanel();
+            }
+
+            // 清除所有定时器
+            function clearAllIntervals() {
+                gameIntervals.forEach(interval => {
+                    clearInterval(interval);
+                });
+                gameIntervals = [];
+            }
+
+            // 创建节点
+            function createNodes() {
+                // 居民区
+                nodes.push({ id: 1, type: NODE_TYPES.RESIDENTIAL, x: 100, y: 100, name: '居民区A' });
+                nodes.push({ id: 2, type: NODE_TYPES.RESIDENTIAL, x: 100, y: 500, name: '居民区B' });
+                nodes.push({ id: 3, type: NODE_TYPES.RESIDENTIAL, x: 200, y: 300, name: '居民区C' });
+
+                // 商业区
+                nodes.push({ id: 4, type: NODE_TYPES.COMMERCIAL, x: 350, y: 150, name: '商业中心A' });
+                nodes.push({ id: 5, type: NODE_TYPES.COMMERCIAL, x: 350, y: 450, name: '商业中心B' });
+
+                // 工业区
+                nodes.push({ id: 6, type: NODE_TYPES.INDUSTRIAL, x: 600, y: 100, name: '工业区A' });
+                nodes.push({ id: 7, type: NODE_TYPES.INDUSTRIAL, x: 600, y: 500, name: '工业区B' });
+
+                // 学校和医院
+                nodes.push({ id: 8, type: NODE_TYPES.SCHOOL, x: 250, y: 350, name: '市一中' });
+                nodes.push({ id: 9, type: NODE_TYPES.HOSPITAL, x: 450, y: 300, name: '中心医院' });
+            }
+
+            // 创建初始道路
+            function createInitialRoads() {
+                // 连接居民区到商业区
+                roads.push({
+                    id: 1,
+                    from: 1, to: 4,
+                    level: ROAD_LEVELS.SINGLE,
+                    vehicles: 0,
+                    congestion: 0
+                });
+
+                roads.push({
+                    id: 2,
+                    from: 2, to: 5,
+                    level: ROAD_LEVELS.SINGLE,
+                    vehicles: 0,
+                    congestion: 0
+                });
+
+                roads.push({
+                    id: 3,
+                    from: 3, to: 4,
+                    level: ROAD_LEVELS.SINGLE,
+                    vehicles: 0,
+                    congestion: 0
+                });
+
+                // 连接商业区到工业区
+                roads.push({
+                    id: 4,
+                    from: 4, to: 6,
+                    level: ROAD_LEVELS.SINGLE,
+                    vehicles: 0,
+                    congestion: 0
+                });
+
+                roads.push({
+                    id: 5,
+                    from: 5, to: 7,
+                    level: ROAD_LEVELS.SINGLE,
+                    vehicles: 0,
+                    congestion: 0
+                });
+
+                // 连接居民区之间和工业区之间
+                roads.push({
+                    id: 6,
+                    from: 1, to: 3,
+                    level: ROAD_LEVELS.SINGLE,
+                    vehicles: 0,
+                    congestion: 0
+                });
+
+                roads.push({
+                    id: 7,
+                    from: 2, to: 3,
+                    level: ROAD_LEVELS.SINGLE,
+                    vehicles: 0,
+                    congestion: 0
+                });
+
+                roads.push({
+                    id: 8,
+                    from: 6, to: 7,
+                    level: ROAD_LEVELS.SINGLE,
+                    vehicles: 0,
+                    congestion: 0
+                });
+
+                // 连接学校和医院
+                roads.push({
+                    id: 9,
+                    from: 8, to: 3,
+                    level: ROAD_LEVELS.SINGLE,
+                    vehicles: 0,
+                    congestion: 0
+                });
+
+                roads.push({
+                    id: 10,
+                    from: 9, to: 4,
+                    level: ROAD_LEVELS.SINGLE,
+                    vehicles: 0,
+                    congestion: 0
+                });
+
+                roads.push({
+                    id: 11,
+                    from: 9, to: 5,
+                    level: ROAD_LEVELS.SINGLE,
+                    vehicles: 0,
+                    congestion: 0
+                });
+
+                updateRoadsCount();
+            }
+
+            // 更新时间
+            function updateTimeOfDay() {
+                gameState.timeOfDay += 1;
+                if (gameState.timeOfDay >= 24) {
+                    gameState.timeOfDay = 0;
+                }
+
+                // 根据时间更新交通模式
+                if (gameState.timeOfDay >= 7 && gameState.timeOfDay < 10) {
+                    gameState.trafficPattern = 'morning';
+                } else if (gameState.timeOfDay >= 10 && gameState.timeOfDay < 16) {
+                    gameState.trafficPattern = 'day';
+                } else if (gameState.timeOfDay >= 16 && gameState.timeOfDay < 19) {
+                    gameState.trafficPattern = 'evening';
+                } else {
+                    gameState.trafficPattern = 'night';
+                }
+
+                updateTimeUI();
+            }
+
+            // 更新时间UI
+            function updateTimeUI() {
+                document.getElementById('game-hour').textContent = gameState.timeOfDay;
+
+                let periodText = '';
+                switch(gameState.trafficPattern) {
+                    case 'morning':
+                        periodText = '早高峰';
+                        break;
+                    case 'day':
+                        periodText = '日间平峰';
+                        break;
+                    case 'evening':
+                        periodText = '晚高峰';
+                        break;
+                    case 'night':
+                        periodText = '夜间';
+                        break;
+                }
+                document.getElementById('time-period').textContent = periodText;
+            }
+
+            // 更新数据面板
+            function updateDataPanel() {
+                document.getElementById('economic-impact').textContent = gameState.economicImpact;
+                document.getElementById('traffic-volume').textContent = gameState.trafficVolume + '%';
+                document.getElementById('public-transit').textContent = gameState.publicTransit + '%';
+                document.getElementById('environment').textContent = gameState.environment;
+
+                // 模拟数据变化
+                const efficiencyChange = Math.round((60 - gameState.avgCommuteTime) / 60 * 100);
+                document.getElementById('economic-trend').textContent =
+                    (efficiencyChange >= 0 ? '+' : '') + efficiencyChange + '% 交通效率提升';
+
+                const congestionChange = Math.round((85 - gameState.maxCongestion) / 85 * 100);
+                document.getElementById('traffic-trend').textContent =
+                    (congestionChange >= 0 ? '-' : '+') + Math.abs(congestionChange) + '% 较上时段';
+
+                const transitChange = Math.round((gameState.publicTransit - 25) / 25 * 100);
+                document.getElementById('transit-trend').textContent =
+                    (transitChange >= 0 ? '+' : '') + transitChange + '% 新增线路';
+
+                const envChange = Math.round((gameState.avgCommuteTime - 60) / 60 * -100);
+                document.getElementById('environment-trend').textContent =
+                    (envChange >= 0 ? '+' : '') + envChange + '% 减少碳排放';
+            }
+
+            // 生成车辆
+            function spawnVehicles() {
+                // 根据时间和交通模式调整生成频率
+                let spawnRate = 0.7;
+
+                switch(gameState.trafficPattern) {
+                    case 'morning':
+                        spawnRate = 0.9; // 高峰时段生成更多车辆
+                        break;
+                    case 'evening':
+                        spawnRate = 0.8;
+                        break;
+                    case 'night':
+                        spawnRate = 0.4; // 夜间减少车辆
+                        break;
+                }
+
+                if (Math.random() > spawnRate) return;
+
+                // 随机选择起点和终点
+                const residentialNodes = nodes.filter(n => n.type === NODE_TYPES.RESIDENTIAL);
+                const commercialNodes = nodes.filter(n => n.type === NODE_TYPES.COMMERCIAL);
+                const industrialNodes = nodes.filter(n => n.type === NODE_TYPES.INDUSTRIAL);
+
+                let fromNode, toNode;
+
+                // 根据时间段模拟不同的出行模式
+                if (gameState.trafficPattern === 'morning') {
+                    // 早高峰：居民区->商业区/工业区
+                    fromNode = residentialNodes[Math.floor(Math.random() * residentialNodes.length)];
+                    toNode = Math.random() < 0.7 ?
+                        commercialNodes[Math.floor(Math.random() * commercialNodes.length)] :
+                        industrialNodes[Math.floor(Math.random() * industrialNodes.length)];
+                } else if (gameState.trafficPattern === 'evening') {
+                    // 晚高峰：商业区/工业区->居民区
+                    toNode = residentialNodes[Math.floor(Math.random() * residentialNodes.length)];
+                    fromNode = Math.random() < 0.7 ?
+                        commercialNodes[Math.floor(Math.random() * commercialNodes.length)] :
+                        industrialNodes[Math.floor(Math.random() * industrialNodes.length)];
+                } else {
+                    // 其他时段：混合出行
+                    const allNodes = [...nodes];
+                    fromNode = allNodes[Math.floor(Math.random() * allNodes.length)];
+
+                    do {
+                        toNode = allNodes[Math.floor(Math.random() * allNodes.length)];
+                    } while (toNode.id === fromNode.id);
+                }
+
+                const route = findRoute(fromNode.id, toNode.id);
+                if (route && route.length > 0) {
+                    vehicles.push({
+                        id: Date.now(),
+                        from: fromNode.id,
+                        to: toNode.id,
+                        x: fromNode.x,
+                        y: fromNode.y,
+                        progress: 0,
+                        currentRoad: null,
+                        route: route,
+                        color: `hsl(${Math.random() * 360}, 70%, 60%)`,
+                        startTime: gameState.gameTime,
+                        isBus: Math.random() < 0.3 && hasBusRouteOnPath(route)
+                    });
+
+                    gameState.vehiclesServed++;
+                }
+            }
+
+            // 检查路径上是否有公交线路
+            function hasBusRouteOnPath(route) {
+                for (const road of route) {
+                    const hasBus = busRoutes.some(busRoute =>
+                        (busRoute.from === road.from && busRoute.to === road.to) ||
+                        (busRoute.from === road.to && busRoute.to === road.from)
+                    );
+                    if (hasBus) return true;
+                }
+                return false;
+            }
+
+            // 寻找路径
+            function findRoute(from, to) {
+                if (from === to) return [];
+
+                const dist = {};
+                const prev = {};
+                const unvisited = new Set();
+
+                nodes.forEach(node => {
+                    dist[node.id] = Infinity;
+                    prev[node.id] = null;
+                    unvisited.add(node.id);
+                });
+
+                dist[from] = 0;
+
+                while (unvisited.size > 0) {
+                    let minNode = null;
+                    for (const nodeId of unvisited) {
+                        if (minNode === null || dist[nodeId] < dist[minNode]) {
+                            minNode = nodeId;
+                        }
+                    }
+
+                    if (minNode === null || minNode === to) break;
+
+                    unvisited.delete(minNode);
+
+                    const connectedRoads = roads.filter(road =>
+                        road.from === minNode || road.to === minNode
+                    );
+
+                    for (const road of connectedRoads) {
+                        const neighbor = road.from === minNode ? road.to : road.from;
+                        if (!unvisited.has(neighbor)) continue;
+
+                        let roadWeight = 1 / road.level.speed * (1 + road.congestion / 100);
+
+                        const hasBus = busRoutes.some(busRoute =>
+                            (busRoute.from === road.from && busRoute.to === road.to) ||
+                            (busRoute.from === road.to && busRoute.to === road.from)
+                        );
+                        if (hasBus) {
+                            roadWeight *= 0.7;
+                        }
+
+                        const alt = dist[minNode] + roadWeight;
+
+                        if (alt < dist[neighbor]) {
+                            dist[neighbor] = alt;
+                            prev[neighbor] = { node: minNode, road: road };
+                        }
+                    }
+                }
+
+                const path = [];
+                let currentNode = to;
+
+                while (prev[currentNode] !== null) {
+                    path.unshift(prev[currentNode].road);
+                    currentNode = prev[currentNode].node;
+                }
+
+                return path.length > 0 ? path : null;
+            }
+
+            // 更新游戏状态
+            function updateGame() {
+                updateVehicles();
+                updateRoadCongestion();
+                gameState.gameTime += 0.1;
+                drawGame();
+                drawSelectionLine();
+                drawNodeHighlight();
+                drawNodeCandidates();
+            }
+
+            // 更新车辆状态
+            function updateVehicles() {
+                for (let i = vehicles.length - 1; i >= 0; i--) {
+                    const vehicle = vehicles[i];
+
+                    if (!vehicle.currentRoad && vehicle.route.length > 0) {
+                        vehicle.currentRoad = vehicle.route.shift();
+                        vehicle.progress = 0;
+                    }
+
+                    if (vehicle.currentRoad) {
+                        const road = vehicle.currentRoad;
+                        const fromNode = nodes.find(n => n.id === road.from);
+                        const toNode = nodes.find(n => n.id === road.to);
+
+                        const isForward = road.from === vehicle.from ||
+                                         (road.to !== vehicle.to && road.from !== vehicle.to);
+
+                        const startNode = isForward ? fromNode : toNode;
+                        const endNode = isForward ? toNode : fromNode;
+
+                        let baseSpeed = 0.01 * road.level.speed;
+
+                        if (vehicle.isBus) {
+                            const hasBus = busRoutes.some(busRoute =>
+                                (busRoute.from === road.from && busRoute.to === road.to) ||
+                                (busRoute.from === road.to && busRoute.to === road.from)
+                            );
+                            if (hasBus) {
+                                baseSpeed *= 1.5;
+                            }
+                        }
+
+                        const congestionFactor = 1 - (road.congestion / 100) * 0.5;
+                        const speed = baseSpeed * congestionFactor;
+
+                        vehicle.progress += speed;
+
+                        vehicle.x = startNode.x + (endNode.x - startNode.x) * vehicle.progress;
+                        vehicle.y = startNode.y + (endNode.y - startNode.y) * vehicle.progress;
+
+                        if (vehicle.progress >= 1) {
+                            const currentNodeId = isForward ? road.to : road.from;
+                            if (vehicle.route.length === 0 && currentNodeId === vehicle.to) {
+                                vehicles.splice(i, 1);
+                            } else {
+                                vehicle.currentRoad = null;
+                                vehicle.from = currentNodeId;
+                            }
+                        }
+                    } else if (vehicle.route.length === 0) {
+                        vehicles.splice(i, 1);
+                    }
+                }
+            }
+
+            // 更新道路拥堵情况
+            function updateRoadCongestion() {
+                roads.forEach(road => {
+                    road.vehicles = 0;
+                });
+
+                vehicles.forEach(vehicle => {
+                    if (vehicle.currentRoad) {
+                        vehicle.currentRoad.vehicles++;
+                    }
+                });
+
+                roads.forEach(road => {
+                    road.congestion = Math.min(100, (road.vehicles / road.level.capacity) * 100);
+                });
+
+                gameState.maxCongestion = Math.max(...roads.map(road => road.congestion));
+
+                const totalCongestion = roads.reduce((sum, road) => sum + road.congestion, 0);
+                const avgCongestion = totalCongestion / roads.length;
+                gameState.avgCommuteTime = 20 + avgCongestion * 0.4;
+
+                // 更新交通数据
+                gameState.trafficVolume = Math.round(100 - (gameState.avgCommuteTime - 20) / 40 * 100);
+                gameState.publicTransit = Math.min(100, 25 + busRoutes.length * 5);
+
+                // 更新经济和环境指标
+                if (gameState.avgCommuteTime < 30) {
+                    gameState.economicImpact = '优秀';
+                    gameState.environment = '优秀';
+                } else if (gameState.avgCommuteTime < 45) {
+                    gameState.economicImpact = '良好';
+                    gameState.environment = '良好';
+                } else if (gameState.avgCommuteTime < 55) {
+                    gameState.economicImpact = '中等';
+                    gameState.environment = '中等';
+                } else {
+                    gameState.economicImpact = '较差';
+                    gameState.environment = '较差';
+                }
+            }
+
+            // 更新统计信息
+            function updateStats() {
+                document.getElementById('budget').textContent = gameState.budget;
+                document.getElementById('avg-time').textContent = Math.round(gameState.avgCommuteTime) + 's';
+                document.getElementById('congestion').textContent = Math.round(gameState.maxCongestion) + '%';
+                calculateScore();
+                document.getElementById('score').textContent = gameState.score;
+                document.getElementById('game-time').textContent = Math.round(gameState.gameTime);
+                document.getElementById('vehicles-served').textContent = gameState.vehiclesServed;
+                document.getElementById('rating').textContent = gameState.rating;
+                updateNetworkConnectivity();
+                updateObjectiveBars();
+                updateDataPanel();
+            }
+
+            // 计算网络连通性
+            function updateNetworkConnectivity() {
+                let connectedPairs = 0;
+                let totalPairs = 0;
+
+                for (let i = 0; i < nodes.length; i++) {
+                    for (let j = i + 1; j < nodes.length; j++) {
+                        totalPairs++;
+                        const route = findRoute(nodes[i].id, nodes[j].id);
+                        if (route && route.length > 0) {
+                            connectedPairs++;
+                        }
+                    }
+                }
+
+                const connectivity = totalPairs > 0 ? Math.round((connectedPairs / totalPairs) * 100) : 0;
+                document.getElementById('network-connectivity').textContent = connectivity + '%';
+
+                return connectivity;
+            }
+
+            // 计算得分
+            function calculateScore() {
+                const timeScore = Math.max(0, 100 - (gameState.avgCommuteTime / gameState.objectives.avgTime) * 100);
+                const congestionScore = Math.max(0, 100 - (gameState.maxCongestion / gameState.objectives.congestion) * 100);
+                const budgetScore = Math.min(100, (gameState.budget / 15000) * 100);
+                const connectivity = updateNetworkConnectivity();
+                const connectivityScore = connectivity;
+
+                gameState.score = Math.round(
+                    timeScore * 0.35 +
+                    congestionScore * 0.35 +
+                    budgetScore * 0.15 +
+                    connectivityScore * 0.15
+                );
+
+                if (gameState.score >= 90) gameState.rating = 'S级';
+                else if (gameState.score >= 80) gameState.rating = 'A级';
+                else if (gameState.score >= 70) gameState.rating = 'B级';
+                else if (gameState.score >= 60) gameState.rating = 'C级';
+                else if (gameState.score >= 50) gameState.rating = 'D级';
+                else gameState.rating = 'E级';
+            }
+
+            // 更新目标进度条
+            function updateObjectiveBars() {
+                const timeProgress = Math.min(100, Math.max(0, (1 - gameState.avgCommuteTime / 60) * 100));
+                document.getElementById('obj1-bar').style.width = `${timeProgress}%`;
+
+                const congestionProgress = Math.min(100, Math.max(0, (1 - gameState.maxCongestion / 100) * 100));
+                document.getElementById('obj2-bar').style.width = `${congestionProgress}%`;
+
+                const budgetProgress = Math.min(100, Math.max(0, (gameState.budget / 15000) * 100));
+                document.getElementById('obj3-bar').style.width = `${budgetProgress}%`;
+            }
+
+            // 更新道路计数
+            function updateRoadsCount() {
+                document.getElementById('roads-count').textContent = roads.length;
+            }
+
+            // 更新公交线路计数
+            function updateBusRoutesCount() {
+                document.getElementById('bus-routes-count').textContent = busRoutes.length;
+            }
+
+            // 绘制游戏
+            function drawGame() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                drawRoads();
+                drawBusRoutes();
+                drawTrafficLights();
+                drawNodes();
+                drawVehicles();
+            }
+
+            // 绘制道路
+            function drawRoads() {
+                roads.forEach(road => {
+                    const fromNode = nodes.find(n => n.id === road.from);
+                    const toNode = nodes.find(n => n.id === road.to);
+
+                    ctx.strokeStyle = road.level.color;
+                    ctx.lineWidth = road.level.width;
+                    ctx.lineCap = 'round';
+
+                    ctx.beginPath();
+                    ctx.moveTo(fromNode.x, fromNode.y);
+                    ctx.lineTo(toNode.x, toNode.y);
+                    ctx.stroke();
+
+                    if (road.congestion > 40) {
+                        const midX = (fromNode.x + toNode.x) / 2;
+                        const midY = (fromNode.y + toNode.y) / 2;
+
+                        ctx.fillStyle = road.congestion > 80 ? '#ff3b30' :
+                                       road.congestion > 60 ? '#ff9500' : '#ffcc00';
+                        ctx.beginPath();
+                        ctx.arc(midX, midY, 8, 0, Math.PI * 2);
+                        ctx.fill();
+
+                        ctx.fillStyle = 'white';
+                        ctx.font = '10px Arial';
+                        ctx.textAlign = 'center';
+                        ctx.textBaseline = 'middle';
+                        ctx.fillText(`${Math.round(road.congestion)}%`, midX, midY);
+                    }
+
+                    if (road.level !== ROAD_LEVELS.SINGLE) {
+                        const labelX = fromNode.x + (toNode.x - fromNode.x) * 0.3;
+                        const labelY = fromNode.y + (toNode.y - fromNode.y) * 0.3;
+
+                        ctx.fillStyle = 'white';
+                        ctx.font = 'bold 12px Arial';
+                        ctx.textAlign = 'center';
+                        ctx.textBaseline = 'middle';
+                        ctx.fillText(road.level.name, labelX, labelY);
+                    }
+                });
+            }
+
+            // 绘制节点
+            function drawNodes() {
+                nodes.forEach(node => {
+                    ctx.fillStyle = node.type.color;
+                    ctx.beginPath();
+                    ctx.arc(node.x, node.y, 15, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    ctx.strokeStyle = 'white';
+                    ctx.lineWidth = 2;
+                    ctx.stroke();
+
+                    ctx.fillStyle = 'white';
+                    ctx.font = '12px Arial';
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'top';
+                    ctx.fillText(node.name, node.x, node.y + 20);
+                });
+            }
+
+            // 绘制车辆
+            function drawVehicles() {
+                vehicles.forEach(vehicle => {
+                    if (vehicle.isBus) {
+                        ctx.fillStyle = vehicle.color;
+                        ctx.fillRect(vehicle.x - 6, vehicle.y - 3, 12, 6);
+                        ctx.strokeStyle = 'white';
+                        ctx.lineWidth = 1;
+                        ctx.strokeRect(vehicle.x - 6, vehicle.y - 3, 12, 6);
+
+                        ctx.fillStyle = 'white';
+                        ctx.font = '8px Arial';
+                        ctx.textAlign = 'center';
+                        ctx.textBaseline = 'middle';
+                        ctx.fillText('🚌', vehicle.x, vehicle.y);
+                    } else {
+                        ctx.fillStyle = vehicle.color;
+                        ctx.beginPath();
+                        ctx.arc(vehicle.x, vehicle.y, 4, 0, Math.PI * 2);
+                        ctx.fill();
+
+                        ctx.strokeStyle = vehicle.color;
+                        ctx.lineWidth = 1;
+                        ctx.beginPath();
+                        ctx.arc(vehicle.x, vehicle.y, 6, 0, Math.PI * 2);
+                        ctx.stroke();
+                    }
+                });
+            }
+
+            // 绘制交通灯
+            function drawTrafficLights() {
+                trafficLights.forEach(light => {
+                    const road = roads.find(r => r.id === light.roadId);
+                    const fromNode = nodes.find(n => n.id === road.from);
+                    const toNode = nodes.find(n => n.id === road.to);
+
+                    const x = fromNode.x + (toNode.x - fromNode.x) * light.position;
+                    const y = fromNode.y + (toNode.y - fromNode.y) * light.position;
+
+                    ctx.fillStyle = light.active ? '#4cd964' : '#ff3b30';
+                    ctx.beginPath();
+                    ctx.arc(x, y, 8, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    ctx.strokeStyle = 'white';
+                    ctx.lineWidth = 1;
+                    ctx.stroke();
+
+                    ctx.fillStyle = 'white';
+                    ctx.font = '12px Arial';
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText('🚦', x, y);
+                });
+            }
+
+            // 绘制公交线路
+            function drawBusRoutes() {
+                busRoutes.forEach(route => {
+                    const fromNode = nodes.find(n => n.id === route.from);
+                    const toNode = nodes.find(n => n.id === route.to);
+
+                    const hasRoad = roads.some(road =>
+                        (road.from === route.from && road.to === route.to) ||
+                        (road.from === route.to && road.to === route.from)
+                    );
+
+                    if (!hasRoad) return;
+
+                    ctx.strokeStyle = '#007aff';
+                    ctx.lineWidth = 3;
+                    ctx.setLineDash([5, 5]);
+
+                    ctx.beginPath();
+                    ctx.moveTo(fromNode.x, fromNode.y);
+                    ctx.lineTo(toNode.x, toNode.y);
+                    ctx.stroke();
+
+                    ctx.setLineDash([]);
+
+                    const midX = (fromNode.x + toNode.x) / 2;
+                    const midY = (fromNode.y + toNode.y) / 2;
+
+                    ctx.fillStyle = '#007aff';
+                    ctx.font = '14px Arial';
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText('🚌', midX, midY);
+                });
+            }
+
+            // 绘制选择线
+            function drawSelectionLine() {
+                if (!selectionLine) return;
+
+                ctx.strokeStyle = '#5ac8fa';
+                ctx.lineWidth = 2;
+                ctx.setLineDash([5, 5]);
+                ctx.beginPath();
+                ctx.moveTo(selectionLine.from.x, selectionLine.from.y);
+                ctx.lineTo(selectionLine.to.x, selectionLine.to.y);
+                ctx.stroke();
+                ctx.setLineDash([]);
+            }
+
+            // 绘制节点高亮
+            function drawNodeHighlight() {
+                if (!nodeHighlight) return;
+
+                ctx.strokeStyle = '#5ac8fa';
+                ctx.lineWidth = 3;
+                ctx.beginPath();
+                ctx.arc(nodeHighlight.x, nodeHighlight.y, 20, 0, Math.PI * 2);
+                ctx.stroke();
+            }
+
+            // 绘制候选节点
+            function drawNodeCandidates() {
+                nodeCandidates.forEach(node => {
+                    ctx.strokeStyle = '#4cd964';
+                    ctx.lineWidth = 2;
+                    ctx.beginPath();
+                    ctx.arc(node.x, node.y, 18, 0, Math.PI * 2);
+                    ctx.stroke();
+                });
+            }
+
+            // 清除选择线
+            function clearSelectionLine() {
+                selectionLine = null;
+            }
+
+            // 清除节点高亮
+            function clearNodeHighlight() {
+                nodeHighlight = null;
+            }
+
+            // 清除候选节点
+            function clearNodeCandidates() {
+                nodeCandidates = [];
+            }
+
+            // 更新候选节点
+            function updateNodeCandidates() {
+                if (!gameState.buildFromNode) {
+                    clearNodeCandidates();
+                    return;
+                }
+
+                // 显示所有其他节点作为候选
+                nodeCandidates = nodes.filter(node =>
+                    node.id !== gameState.buildFromNode.id &&
+                    !roads.some(road =>
+                        (road.from === gameState.buildFromNode.id && road.to === node.id) ||
+                        (road.from === node.id && road.to === gameState.buildFromNode.id)
+                    )
+                );
+            }
+
+            // 工具按钮事件处理
+            document.getElementById('build-road').addEventListener('click', function() {
+                gameState.selectedTool = 'build-road';
+                gameState.buildFromNode = null;
+                gameState.selectedRoadType = null;
+                setActiveTool(this);
+                hideRoadOptions();
+                hideRoadTypeSelector();
+                clearSelectionLine();
+                clearNodeHighlight();
+                clearNodeCandidates();
+            });
+
+            document.getElementById('upgrade-road').addEventListener('click', function() {
+                gameState.selectedTool = 'upgrade-road';
+                gameState.buildFromNode = null;
+                gameState.selectedRoadType = null;
+                setActiveTool(this);
+                hideRoadOptions();
+                hideRoadTypeSelector();
+                clearSelectionLine();
+                clearNodeHighlight();
+                clearNodeCandidates();
+            });
+
+            document.getElementById('add-bus').addEventListener('click', function() {
+                gameState.selectedTool = 'add-bus';
+                gameState.buildFromNode = null;
+                gameState.selectedRoadType = null;
+                setActiveTool(this);
+                hideRoadOptions();
+                hideRoadTypeSelector();
+                clearSelectionLine();
+                clearNodeHighlight();
+                clearNodeCandidates();
+            });
+
+            document.getElementById('add-traffic-light').addEventListener('click', function() {
+                gameState.selectedTool = 'add-traffic-light';
+                gameState.buildFromNode = null;
+                gameState.selectedRoadType = null;
+                setActiveTool(this);
+                hideRoadOptions();
+                hideRoadTypeSelector();
+                clearSelectionLine();
+                clearNodeHighlight();
+                clearNodeCandidates();
+            });
+
+            document.getElementById('reset').addEventListener('click', function() {
+                if (confirm('确定要重置游戏吗？所有进度将丢失。')) {
+                    initGame();
+                }
+            });
+
+            function setActiveTool(button) {
+                document.querySelectorAll('.tool-btn').forEach(btn => {
+                    btn.classList.remove('active');
+                });
+                button.classList.add('active');
+            }
+
+            // 隐藏道路选项菜单
+            function hideRoadOptions() {
+                roadOptions.style.display = 'none';
+            }
+
+            // 隐藏道路类型选择器
+            function hideRoadTypeSelector() {
+                roadTypeSelector.style.display = 'none';
+            }
+
+            // 画布点击事件处理
+            canvas.addEventListener('click', function(event) {
+                event.preventDefault();
+                event.stopPropagation();
+
+                const rect = canvas.getBoundingClientRect();
+                const x = event.clientX - rect.left;
+                const y = event.clientY - rect.top;
+
+                switch (gameState.selectedTool) {
+                    case 'build-road':
+                        handleBuildRoad(x, y);
+                        break;
+                    case 'upgrade-road':
+                        handleUpgradeRoad(x, y);
+                        break;
+                    case 'add-bus':
+                        handleAddBusRoute(x, y);
+                        break;
+                    case 'add-traffic-light':
+                        handleAddTrafficLight(x, y);
+                        break;
+                }
+            });
+
+            // 处理建造道路
+            function handleBuildRoad(x, y) {
+                const clickedNode = findClickedNode(x, y);
+
+                // 如果点击了节点
+                if (clickedNode) {
+                    if (!gameState.buildFromNode) {
+                        // 选择第一个节点
+                        gameState.buildFromNode = clickedNode;
+                        nodeHighlight = clickedNode;
+                        updateNodeCandidates();
+                        showEffect(clickedNode.x, clickedNode.y, '选择第二个节点', '#5ac8fa');
+                    } else if (gameState.buildFromNode.id !== clickedNode.id) {
+                        // 选择第二个不同节点，显示道路类型选择器
+                        showRoadTypeSelector(x, y, gameState.buildFromNode, clickedNode);
+                    } else {
+                        // 选择了相同节点，取消选择
+                        showEffect(clickedNode.x, clickedNode.y, '已取消选择', '#ff9500');
+                        gameState.buildFromNode = null;
+                        clearSelectionLine();
+                        clearNodeHighlight();
+                        clearNodeCandidates();
+                    }
+                } else {
+                    // 点击了空白区域，取消选择
+                    if (gameState.buildFromNode) {
+                        showEffect(gameState.buildFromNode.x, gameState.buildFromNode.y, '已取消选择', '#ff9500');
+                        gameState.buildFromNode = null;
+                        clearSelectionLine();
+                        clearNodeHighlight();
+                        clearNodeCandidates();
+                    }
+                }
+            }
+
+            // 显示道路类型选择器
+            function showRoadTypeSelector(x, y, fromNode, toNode) {
+                // 清空现有的选项
+                roadTypeSelector.innerHTML = '';
+
+                // 添加道路类型选项
+                addRoadTypeOption('SINGLE', '单车道', ROAD_LEVELS.SINGLE.cost, fromNode, toNode);
+                addRoadTypeOption('DOUBLE', '双车道', ROAD_LEVELS.DOUBLE.cost, fromNode, toNode);
+                addRoadTypeOption('QUAD', '四车道', ROAD_LEVELS.QUAD.cost, fromNode, toNode);
+
+                roadTypeSelector.style.display = 'block';
+                roadTypeSelector.style.left = `${x}px`;
+                roadTypeSelector.style.top = `${y}px`;
+
+                function addRoadTypeOption(level, text, cost, fromNode, toNode) {
+                    const option = document.createElement('div');
+                    option.className = 'road-type-option';
+                    option.innerHTML = `
+                        <span class="road-type-icon">${ROAD_LEVELS[level].icon}</span>
+                        <span>${text} (${cost}金币)</span>
+                    `;
+                    option.setAttribute('data-level', level);
+                    option.addEventListener('click', function(e) {
+                        e.stopPropagation();
+                        buildNewRoad(fromNode, toNode, level);
+                        hideRoadTypeSelector();
+                        gameState.buildFromNode = null;
+                        clearSelectionLine();
+                        clearNodeHighlight();
+                        clearNodeCandidates();
+                    });
+                    roadTypeSelector.appendChild(option);
+                }
+            }
+
+            // 鼠标移动事件 - 绘制选择线
+            canvas.addEventListener('mousemove', function(event) {
+                if (gameState.selectedTool === 'build-road' && gameState.buildFromNode) {
+                    const rect = canvas.getBoundingClientRect();
+                    const x = event.clientX - rect.left;
+                    const y = event.clientY - rect.top;
+
+                    selectionLine = {
+                        from: gameState.buildFromNode,
+                        to: { x: x, y: y }
+                    };
+                }
+            });
+
+            // 处理升级道路
+            function handleUpgradeRoad(x, y) {
+                const clickedRoad = findClickedRoad(x, y);
+
+                // 如果点击了道路，显示升级选项
+                if (clickedRoad) {
+                    showRoadOptions(x, y, clickedRoad);
+                }
+            }
+
+            // 显示道路选项菜单
+            function showRoadOptions(x, y, road) {
+                // 清空现有的选项
+                roadOptions.innerHTML = '';
+
+                // 根据道路当前等级显示可用的升级选项
+                if (road.level === ROAD_LEVELS.SINGLE) {
+                    addRoadOption('DOUBLE', '升级为双车道', ROAD_LEVELS.DOUBLE.cost);
+                    addRoadOption('QUAD', '升级为四车道', ROAD_LEVELS.QUAD.cost);
+                } else if (road.level === ROAD_LEVELS.DOUBLE) {
+                    addRoadOption('QUAD', '升级为四车道', ROAD_LEVELS.QUAD.cost);
+                } else {
+                    // 已经是最高等级
+                    const option = document.createElement('div');
+                    option.className = 'road-option';
+                    option.textContent = '已是最高级别';
+                    roadOptions.appendChild(option);
+                }
+
+                roadOptions.style.display = 'block';
+                roadOptions.style.left = `${x}px`;
+                roadOptions.style.top = `${y}px`;
+
+                function addRoadOption(level, text, cost) {
+                    const option = document.createElement('div');
+                    option.className = 'road-option';
+                    option.textContent = `${text} (${cost}金币)`;
+                    option.setAttribute('data-level', level);
+                    option.addEventListener('click', function(e) {
+                        e.stopPropagation();
+                        upgradeRoad(road, level);
+                        hideRoadOptions();
+                    });
+                    roadOptions.appendChild(option);
+                }
+            }
+
+            // 升级道路
+            function upgradeRoad(road, level) {
+                const currentLevel = road.level;
+                let nextLevel;
+                let cost;
+
+                if (level === 'DOUBLE' && currentLevel === ROAD_LEVELS.SINGLE) {
+                    nextLevel = ROAD_LEVELS.DOUBLE;
+                    cost = ROAD_LEVELS.DOUBLE.cost;
+                } else if (level === 'QUAD' && currentLevel === ROAD_LEVELS.DOUBLE) {
+                    nextLevel = ROAD_LEVELS.QUAD;
+                    cost = ROAD_LEVELS.QUAD.cost;
+                } else if (level === 'QUAD' && currentLevel === ROAD_LEVELS.SINGLE) {
+                    nextLevel = ROAD_LEVELS.QUAD;
+                    cost = ROAD_LEVELS.QUAD.cost + ROAD_LEVELS.DOUBLE.cost;
+                } else {
+                    showUpgradeEffect(road, '无法升级!', '#ff3b30');
+                    return;
+                }
+
+                if (gameState.budget >= cost) {
+                    gameState.budget -= cost;
+                    road.level = nextLevel;
+                    showUpgradeEffect(road, `升级成功! ${nextLevel.name}`, '#4cd964');
+                } else {
+                    showUpgradeEffect(road, '预算不足!', '#ff3b30');
+                }
+            }
+
+            // 显示升级效果
+            function showUpgradeEffect(road, text, color) {
+                const fromNode = nodes.find(n => n.id === road.from);
+                const toNode = nodes.find(n => n.id === road.to);
+                const midX = (fromNode.x + toNode.x) / 2;
+                const midY = (fromNode.y + toNode.y) / 2;
+
+                const effect = document.createElement('div');
+                effect.className = 'upgrade-effect';
+                effect.textContent = text;
+                effect.style.color = color;
+                effect.style.left = `${midX}px`;
+                effect.style.top = `${midY}px`;
+
+                document.querySelector('.map-container').appendChild(effect);
+
+                setTimeout(() => {
+                    effect.remove();
+                }, 1500);
+            }
+
+            // 建造新道路
+            function buildNewRoad(fromNode, toNode, level) {
+                const cost = ROAD_LEVELS[level].cost;
+
+                // 检查是否已存在道路
+                const existingRoad = roads.find(road =>
+                    (road.from === fromNode.id && road.to === toNode.id) ||
+                    (road.from === toNode.id && road.to === fromNode.id)
+                );
+
+                if (existingRoad) {
+                    showEffect((fromNode.x + toNode.x) / 2, (fromNode.y + toNode.y) / 2, '道路已存在!', '#ff9500');
+                    return;
+                }
+
+                if (gameState.budget >= cost) {
+                    gameState.budget -= cost;
+
+                    const newRoad = {
+                        id: roads.length + 1,
+                        from: fromNode.id,
+                        to: toNode.id,
+                        level: ROAD_LEVELS[level],
+                        vehicles: 0,
+                        congestion: 0
+                    };
+
+                    roads.push(newRoad);
+
+                    const midX = (fromNode.x + toNode.x) / 2;
+                    const midY = (fromNode.y + toNode.y) / 2;
+                    showEffect(midX, midY, `道路建造成功! -${cost}金币`, '#4cd964');
+
+                    updateRoadsCount();
+                    updateNetworkConnectivity();
+                } else {
+                    const midX = (fromNode.x + toNode.x) / 2;
+                    const midY = (fromNode.y + toNode.y) / 2;
+                    showEffect(midX, midY, '预算不足!', '#ff3b30');
+                }
+            }
+
+            // 处理添加公交线路
+            function handleAddBusRoute(x, y) {
+                const clickedNode = findClickedNode(x, y);
+
+                if (clickedNode && !gameState.busFromNode) {
+                    gameState.busFromNode = clickedNode;
+                    showEffect(clickedNode.x, clickedNode.y, '选择终点', '#5ac8fa');
+                } else if (clickedNode && gameState.busFromNode) {
+                    if (gameState.busFromNode.id === clickedNode.id) {
+                        showEffect(clickedNode.x, clickedNode.y, '不能选择相同节点!', '#ff3b30');
+                        gameState.busFromNode = null;
+                        return;
+                    }
+
+                    const hasRoad = roads.some(road =>
+                        (road.from === gameState.busFromNode.id && road.to === clickedNode.id) ||
+                        (road.from === clickedNode.id && road.to === gameState.busFromNode.id)
+                    );
+
+                    if (!hasRoad) {
+                        showEffect(clickedNode.x, clickedNode.y, '节点之间没有道路连接!', '#ff3b30');
+                        gameState.busFromNode = null;
+                        return;
+                    }
+
+                    const existingRoute = busRoutes.find(route =>
+                        (route.from === gameState.busFromNode.id && route.to === clickedNode.id) ||
+                        (route.from === clickedNode.id && route.to === gameState.busFromNode.id)
+                    );
+
+                    if (existingRoute) {
+                        showEffect(clickedNode.x, clickedNode.y, '公交线路已存在!', '#ff9500');
+                    } else if (gameState.budget >= 800) {
+                        gameState.budget -= 800;
+
+                        busRoutes.push({
+                            from: gameState.busFromNode.id,
+                            to: clickedNode.id
+                        });
+
+                        showEffect(clickedNode.x, clickedNode.y, '公交线路已添加! -800金币', '#4cd964');
+                        updateBusRoutesCount();
+                    } else {
+                        showEffect(clickedNode.x, clickedNode.y, '预算不足!', '#ff3b30');
+                    }
+
+                    gameState.busFromNode = null;
+                }
+            }
+
+            // 处理添加交通灯
+            function handleAddTrafficLight(x, y) {
+                const clickedRoad = findClickedRoad(x, y);
+
+                if (clickedRoad) {
+                    if (gameState.budget >= 300) {
+                        gameState.budget -= 300;
+
+                        const fromNode = nodes.find(n => n.id === clickedRoad.from);
+                        const toNode = nodes.find(n => n.id === clickedRoad.to);
+
+                        const dx = toNode.x - fromNode.x;
+                        const dy = toNode.y - fromNode.y;
+                        const roadLength = Math.sqrt(dx * dx + dy * dy);
+
+                        const vx = x - fromNode.x;
+                        const vy = y - fromNode.y;
+                        const dot = vx * dx + vy * dy;
+                        const position = dot / (roadLength * roadLength);
+
+                        trafficLights.push({
+                            roadId: clickedRoad.id,
+                            position: Math.max(0.1, Math.min(0.9, position)),
+                            active: true
+                        });
+
+                        showEffect(x, y, '信号灯已设置! -300金币', '#4cd964');
+                    } else {
+                        showEffect(x, y, '预算不足!', '#ff3b30');
+                    }
+                }
+            }
+
+            // 查找点击的道路
+            function findClickedRoad(x, y) {
+                for (const road of roads) {
+                    const fromNode = nodes.find(n => n.id === road.from);
+                    const toNode = nodes.find(n => n.id === road.to);
+
+                    const distance = pointToLineDistance(x, y, fromNode.x, fromNode.y, toNode.x, toNode.y);
+
+                    if (distance < 15) { // 增加点击区域
+                        road.midX = (fromNode.x + toNode.x) / 2;
+                        road.midY = (fromNode.y + toNode.y) / 2;
+                        return road;
+                    }
+                }
+                return null;
+            }
+
+            // 查找点击的节点
+            function findClickedNode(x, y) {
+                for (const node of nodes) {
+                    const distance = Math.sqrt((x - node.x) ** 2 + (y - node.y) ** 2);
+                    if (distance < 25) { // 增加点击区域
+                        return node;
+                    }
+                }
+                return null;
+            }
+
+            // 计算点到线段的距离
+            function pointToLineDistance(px, py, x1, y1, x2, y2) {
+                const A = px - x1;
+                const B = py - y1;
+                const C = x2 - x1;
+                const D = y2 - y1;
+
+                const dot = A * C + B * D;
+                const lenSq = C * C + D * D;
+                let param = -1;
+
+                if (lenSq !== 0) {
+                    param = dot / lenSq;
+                }
+
+                let xx, yy;
+
+                if (param < 0) {
+                    xx = x1;
+                    yy = y1;
+                } else if (param > 1) {
+                    xx = x2;
+                    yy = y2;
+                } else {
+                    xx = x1 + param * C;
+                    yy = y1 + param * D;
+                }
+
+                const dx = px - xx;
+                const dy = py - yy;
+
+                return Math.sqrt(dx * dx + dy * dy);
+            }
+
+            // 显示效果文本
+            function showEffect(x, y, text, color) {
+                const effect = document.createElement('div');
+                effect.className = 'upgrade-effect';
+                effect.textContent = text;
+                effect.style.color = color;
+                effect.style.left = `${x}px`;
+                effect.style.top = `${y}px`;
+
+                document.querySelector('.map-container').appendChild(effect);
+
+                setTimeout(() => {
+                    effect.remove();
+                }, 1500);
+            }
+
+            // 启动游戏
+            initGame();
+        });
+    </script>
+</body>
+</html>

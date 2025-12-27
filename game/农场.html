@@ -1,0 +1,1200 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>农场资源分配师 - 数学建模思维小游戏</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.8/dist/chart.umd.min.js"></script>
+    
+    <!-- 配置Tailwind自定义颜色和字体 -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#4CAF50',
+                        secondary: '#FF9800',
+                        accent: '#2196F3',
+                        neutral: '#F5F5F5',
+                        dark: '#333333',
+                        solution: '#9C27B0',
+                        backBtn: '#607D8B'
+                    },
+                    fontFamily: {
+                        sans: ['Nunito', 'system-ui', 'sans-serif'],
+                    },
+                }
+            }
+        }
+    </script>
+    
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .content-auto {
+                content-visibility: auto;
+            }
+            .resource-slider {
+                @apply w-full h-3 rounded-lg appearance-none cursor-pointer bg-gray-200;
+            }
+            .resource-slider::-webkit-slider-thumb {
+                @apply appearance-none w-6 h-6 rounded-full bg-primary border-2 border-white shadow-md transition-transform duration-200 hover:scale-110;
+            }
+            .card-hover {
+                @apply transition-all duration-300 hover:shadow-lg hover:-translate-y-1;
+            }
+            .btn-primary {
+                @apply bg-primary text-white py-2 px-6 rounded-full font-bold shadow-md transition-all duration-300 hover:bg-primary/90 hover:shadow-lg transform hover:-translate-y-0.5 active:translate-y-0;
+            }
+            .btn-secondary {
+                @apply bg-secondary text-white py-2 px-6 rounded-full font-bold shadow-md transition-all duration-300 hover:bg-secondary/90 hover:shadow-lg transform hover:-translate-y-0.5 active:translate-y-0;
+            }
+            .btn-solution {
+                @apply bg-solution text-white py-2 px-6 rounded-full font-bold shadow-md transition-all duration-300 hover:bg-solution/90 hover:shadow-lg transform hover:-translate-y-0.5 active:translate-y-0;
+            }
+            .btn-back {
+                @apply bg-backBtn text-white py-2 px-6 rounded-full font-bold shadow-md transition-all duration-300 hover:bg-backBtn/90 hover:shadow-lg transform hover:-translate-y-0.5 active:translate-y-0;
+            }
+            .hint-badge {
+                @apply bg-purple-100 text-purple-800 text-xs font-medium px-2.5 py-0.5 rounded-full inline-block;
+            }
+            .seed-type-selected {
+                @apply border-primary bg-primary/5 ring-2 ring-primary/20;
+            }
+            .hint-highlight {
+                @apply font-semibold text-purple-700;
+            }
+            .btn-disabled {
+                @apply opacity-50 cursor-not-allowed pointer-events-none;
+            }
+            .solution-highlight {
+                @apply ring-2 ring-solution/50 animate-pulse;
+            }
+        }
+    </style>
+</head>
+<body class="bg-neutral min-h-screen font-sans text-dark">
+    <!-- 顶部导航栏 -->
+    <header class="bg-primary text-white shadow-md">
+        <div class="container mx-auto px-4 py-4 flex flex-wrap items-center justify-between">
+            <div class="flex items-center">
+                <i class="fa fa-leaf text-3xl mr-3"></i>
+                <h1 class="text-2xl md:text-3xl font-bold">农场资源分配师</h1>
+            </div>
+            <div class="mt-2 md:mt-0 flex flex-col sm:flex-row gap-3">
+                <!-- 返回难度选择按钮 (初始隐藏) -->
+                <button id="back-to-difficulty" class="btn-back hidden">
+                    <i class="fa fa-arrow-left mr-2"></i>返回难度选择
+                </button>
+                <span class="bg-white/20 px-3 py-1 rounded-full text-sm">数学建模思维小游戏</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- 主游戏区域 -->
+    <main class="container mx-auto px-4 py-8">
+        <!-- 游戏介绍和难度选择 -->
+        <section id="game-intro" class="mb-8 bg-white rounded-xl shadow-md p-6">
+            <h2 class="text-2xl font-bold mb-4 text-primary">欢迎来到农场！</h2>
+            <p class="mb-4">你是一名农场资源分配师，需要选择合适的种子并合理分配资源，让农作物长得最好！</p>
+            
+            <div class="mb-6">
+                <h3 class="text-xl font-semibold mb-2">选择难度级别：</h3>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div class="border-2 border-primary rounded-lg p-4 card-hover cursor-pointer difficulty-level" data-level="1">
+                        <h4 class="font-bold text-lg mb-1">简单分配</h4>
+                        <p class="text-sm">简单分配，资源点数: 20</p>
+                    </div>
+                    <div class="border-2 border-gray-300 rounded-lg p-4 card-hover cursor-pointer difficulty-level" data-level="2">
+                        <h4 class="font-bold text-lg mb-1">中等难度</h4>
+                        <p class="text-sm">中等难度，资源点数: 30</p>
+                    </div>
+                    <div class="border-2 border-gray-300 rounded-lg p-4 card-hover cursor-pointer difficulty-level" data-level="3">
+                        <h4 class="font-bold text-lg mb-1">高级挑战</h4>
+                        <p class="text-sm">高级挑战，资源点数: 50</p>
+                    </div>
+                </div>
+            </div>
+            
+            <button id="start-game" class="btn-primary btn-disabled" disabled>
+                <i class="fa fa-play mr-2"></i>开始游戏
+            </button>
+        </section>
+
+        <!-- 游戏区域 (初始隐藏) -->
+        <section id="game-area" class="hidden">
+            <!-- 种子选择区 -->
+            <div class="bg-white rounded-xl shadow-md p-6 mb-6">
+                <h2 class="text-xl font-bold mb-4 text-primary">选择种子类型</h2>
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <!-- 小麦种子 -->
+                    <div class="seed-type border-2 rounded-lg p-4 card-hover cursor-pointer seed-type-selected" data-seed="wheat">
+                        <div class="flex items-center mb-2">
+                            <i class="fa fa-wheat-awn text-yellow-600 text-2xl mr-3"></i>
+                            <h3 class="font-bold">小麦</h3>
+                        </div>
+                        <p class="text-sm mb-2">适应性强，对资源需求均衡</p>
+                        <div class="flex flex-wrap gap-2 text-xs">
+                            <span class="bg-green-100 text-green-800 px-2 py-0.5 rounded">种子需求: 中</span>
+                            <span class="bg-blue-100 text-blue-800 px-2 py-0.5 rounded">水需求: 中</span>
+                            <span class="bg-yellow-100 text-yellow-800 px-2 py-0.5 rounded">肥料需求: 低</span>
+                        </div>
+                    </div>
+                    
+                    <!-- 水稻种子 -->
+                    <div class="seed-type border-2 border-gray-300 rounded-lg p-4 card-hover cursor-pointer" data-seed="rice">
+                        <div class="flex items-center mb-2">
+                            <i class="fa fa-seedling text-green-600 text-2xl mr-3"></i>
+                            <h3 class="font-bold">水稻</h3>
+                        </div>
+                        <p class="text-sm mb-2">喜水作物，需要大量水分</p>
+                        <div class="flex flex-wrap gap-2 text-xs">
+                            <span class="bg-green-100 text-green-800 px-2 py-0.5 rounded">种子需求: 中</span>
+                            <span class="bg-blue-100 text-blue-800 px-2 py-0.5 rounded">水需求: 高</span>
+                            <span class="bg-yellow-100 text-yellow-800 px-2 py-0.5 rounded">肥料需求: 中</span>
+                        </div>
+                    </div>
+                    
+                    <!-- 玉米种子 -->
+                    <div class="seed-type border-2 border-gray-300 rounded-lg p-4 card-hover cursor-pointer" data-seed="corn">
+                        <div class="flex items-center mb-2">
+                            <i class="fa fa-corn text-orange-600 text-2xl mr-3"></i>
+                            <h3 class="font-bold">玉米</h3>
+                        </div>
+                        <p class="text-sm mb-2">生长旺盛，需要较多肥料</p>
+                        <div class="flex flex-wrap gap-2 text-xs">
+                            <span class="bg-green-100 text-green-800 px-2 py-0.5 rounded">种子需求: 高</span>
+                            <span class="bg-blue-100 text-blue-800 px-2 py-0.5 rounded">水需求: 中</span>
+                            <span class="bg-yellow-100 text-yellow-800 px-2 py-0.5 rounded">肥料需求: 高</span>
+                        </div>
+                    </div>
+                    
+                    <!-- 蔬菜种子 -->
+                    <div class="seed-type border-2 border-gray-300 rounded-lg p-4 card-hover cursor-pointer" data-seed="vegetable">
+                        <div class="flex items-center mb-2">
+                            <i class="fa fa-apple text-red-500 text-2xl mr-3"></i>
+                            <h3 class="font-bold">蔬菜</h3>
+                        </div>
+                        <p class="text-sm mb-2">对资源需求均衡但总量要求高</p>
+                        <div class="flex flex-wrap gap-2 text-xs">
+                            <span class="bg-green-100 text-green-800 px-2 py-0.5 rounded">种子需求: 中</span>
+                            <span class="bg-blue-100 text-blue-800 px-2 py-0.5 rounded">水需求: 中</span>
+                            <span class="bg-yellow-100 text-yellow-800 px-2 py-0.5 rounded">肥料需求: 中</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 资源分配区 -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+                <!-- 资源滑块 -->
+                <div class="bg-white rounded-xl shadow-md p-6">
+                    <h2 class="text-xl font-bold mb-6 text-primary">分配你的资源</h2>
+                    
+                    <div id="resources-container">
+                        <!-- 种子资源 -->
+                        <div class="mb-6">
+                            <div class="flex justify-between mb-2">
+                                <label class="font-semibold flex items-center">
+                                    <i class="fa fa-seedling text-green-600 mr-2"></i>种子
+                                </label>
+                                <span id="seed-value" class="bg-primary/10 text-primary px-2 py-1 rounded">0</span>
+                            </div>
+                            <input type="range" id="seed-slider" class="resource-slider" min="0" max="20" value="0">
+                        </div>
+                        
+                        <!-- 水资源 -->
+                        <div class="mb-6">
+                            <div class="flex justify-between mb-2">
+                                <label class="font-semibold flex items-center">
+                                    <i class="fa fa-tint text-blue-500 mr-2"></i>水
+                                </label>
+                                <span id="water-value" class="bg-accent/10 text-accent px-2 py-1 rounded">0</span>
+                            </div>
+                            <input type="range" id="water-slider" class="resource-slider" min="0" max="20" value="0">
+                        </div>
+                        
+                        <!-- 肥料资源 -->
+                        <div class="mb-6">
+                            <div class="flex justify-between mb-2">
+                                <label class="font-semibold flex items-center">
+                                    <i class="fa fa-pagelines text-yellow-600 mr-2"></i>肥料
+                                </label>
+                                <span id="fertilizer-value" class="bg-secondary/10 text-secondary px-2 py-1 rounded">0</span>
+                            </div>
+                            <input type="range" id="fertilizer-slider" class="resource-slider" min="0" max="20" value="0">
+                        </div>
+                    </div>
+                    
+                    <div id="resource-info" class="mt-4 p-3 bg-blue-50 rounded border border-blue-200">
+                        <p class="text-sm font-medium flex items-center">
+                            <i class="fa fa-info-circle text-blue-600 mr-2"></i>
+                            <span>已使用: <span id="used-resources">0</span> / 总资源: <span id="total-resources">20</span></span>
+                        </p>
+                        <p id="limit-warning" class="text-sm text-red-500 mt-1 hidden">资源总和超过限制了！</p>
+                    </div>
+                    
+                    <!-- 最佳方案提示区域 -->
+                    <div id="solution-container" class="mt-4 p-3 bg-purple-50 rounded border border-purple-200 hidden">
+                        <p class="text-sm font-medium flex items-center">
+                            <i class="fa fa-star text-solution mr-2"></i>
+                            <span id="solution-text">最佳方案：种子6，水6，肥料8</span>
+                        </p>
+                    </div>
+                    
+                    <!-- 提示区域 -->
+                    <div id="hint-container" class="mt-4 p-3 bg-purple-50 rounded border border-purple-200 hidden">
+                        <p class="text-sm font-medium flex items-center">
+                            <i class="fa fa-lightbulb-o text-purple-600 mr-2"></i>
+                            <span id="hint-text">小提示：尝试增加水的用量</span>
+                        </p>
+                    </div>
+                    
+                    <button id="plant-crops" class="btn-secondary w-full mt-4">
+                        <i class="fa fa-paint-brush mr-2"></i>种植作物
+                    </button>
+                </div>
+                
+                <!-- 农场展示区 -->
+                <div class="bg-white rounded-xl shadow-md p-6">
+                    <h2 class="text-xl font-bold mb-4 text-primary">你的农场</h2>
+                    <div id="farm-display" class="aspect-video bg-green-100 rounded-lg overflow-hidden relative flex items-center justify-center">
+                        <div class="text-center text-gray-400" id="empty-farm">
+                            <i class="fa fa-meadow text-5xl mb-2"></i>
+                            <p>选择种子并分配资源后种植</p>
+                        </div>
+                        <div id="crops-container" class="w-full h-full hidden">
+                            <!-- 作物将在这里动态生成 -->
+                        </div>
+                    </div>
+                    <div class="mt-4 text-center">
+                        <div class="inline-block bg-green-100 rounded-full px-4 py-2">
+                            <p class="font-semibold">作物生长得分: <span id="growth-score" class="text-primary">0</span>/100</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 结果分析区 -->
+                <div class="bg-white rounded-xl shadow-md p-6">
+                    <h2 class="text-xl font-bold mb-4 text-primary">结果分析</h2>
+                    <div class="mb-4">
+                        <canvas id="results-chart" width="400" height="200"></canvas>
+                    </div>
+                    <div id="feedback" class="p-4 bg-gray-50 rounded-lg">
+                        <p class="text-center text-gray-500">种植作物后查看分析结果</p>
+                    </div>
+                    <button id="try-again" class="btn-primary w-full mt-4 hidden">
+                        <i class="fa fa-refresh mr-2"></i>再试一次
+                    </button>
+                    <button id="show-hint" class="mt-2 w-full py-2 px-4 border border-purple-300 bg-purple-50 text-purple-700 rounded-full text-sm font-medium hover:bg-purple-100 transition-colors">
+                        <i class="fa fa-question-circle mr-1"></i>需要一点提示
+                    </button>
+                    <button id="show-solution" class="mt-2 w-full py-2 px-4 bg-solution/10 text-solution rounded-full text-sm font-medium hover:bg-solution/20 transition-colors">
+                        <i class="fa fa-check-circle mr-1"></i>查看最佳方案
+                    </button>
+                </div>
+            </div>
+            
+            <!-- 历史记录 -->
+            <div class="bg-white rounded-xl shadow-md p-6 mb-8">
+                <h2 class="text-xl font-bold mb-4 text-primary">你的实验记录</h2>
+                <div class="flex items-center mb-3">
+                    <span id="failed-attempts" class="hint-badge hidden">
+                        <i class="fa fa-exclamation-circle mr-1"></i>连续失败: 0次
+                    </span>
+                </div>
+                <div id="history-container" class="overflow-x-auto">
+                    <table class="min-w-full">
+                        <thead>
+                            <tr class="bg-gray-100">
+                                <th class="py-2 px-4 border-b">尝试次数</th>
+                                <th class="py-2 px-4 border-b">作物类型</th>
+                                <th class="py-2 px-4 border-b">种子</th>
+                                <th class="py-2 px-4 border-b">水</th>
+                                <th class="py-2 px-4 border-b">肥料</th>
+                                <th class="py-2 px-4 border-b">总分</th>
+                                <th class="py-2 px-4 border-b">状态</th>
+                            </tr>
+                        </thead>
+                        <tbody id="history-body">
+                            <tr>
+                                <td colspan="7" class="py-4 text-center text-gray-500">暂无记录</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+        
+        <!-- 学习要点 -->
+        <section class="bg-white rounded-xl shadow-md p-6 mb-8">
+            <h2 class="text-xl font-bold mb-4 text-primary">数学建模小知识</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="border-l-4 border-primary pl-4">
+                    <h3 class="font-bold text-lg mb-2">数据分析与优化</h3>
+                    <p>通过分析实验结果，找出改进空间，不断优化方案，这是数学建模的重要步骤。</p>
+                </div>
+                <div class="border-l-4 border-secondary pl-4">
+                    <h3 class="font-bold text-lg mb-2">针对性调整</h3>
+                    <p>根据不同对象的特性进行针对性调整，能更有效地利用资源，获得更好的结果。</p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- 页脚 -->
+    <footer class="bg-dark text-white py-6">
+        <div class="container mx-auto px-4 text-center">
+            <p>农场资源分配师 &copy; 2023 - 数学建模思维小游戏</p>
+            <p class="text-sm mt-2 text-gray-400">适合1-6年级学生使用</p>
+        </div>
+    </footer>
+
+    <script>
+        // 种子类型特性定义
+        const seedTypes = {
+            wheat: {
+                name: "小麦",
+                icon: "fa-wheat-awn",
+                color: "text-yellow-600",
+                resourceWeights: { seed: 2, water: 2, fertilizer: 1 },
+                optimalRatio: { seed: 3, water: 3, fertilizer: 2 },
+                description: "小麦对资源需求均衡，适合初学者尝试"
+            },
+            rice: {
+                name: "水稻",
+                icon: "fa-seedling",
+                color: "text-green-600",
+                resourceWeights: { seed: 2, water: 3, fertilizer: 2 },
+                optimalRatio: { seed: 2, water: 4, fertilizer: 2 },
+                description: "水稻需要大量水分，水的分配尤为重要"
+            },
+            corn: {
+                name: "玉米",
+                icon: "fa-corn",
+                color: "text-orange-600",
+                resourceWeights: { seed: 3, water: 2, fertilizer: 3 },
+                optimalRatio: { seed: 3, water: 2, fertilizer: 3 },
+                description: "玉米生长需要较多种子和肥料，水的需求中等"
+            },
+            vegetable: {
+                name: "蔬菜",
+                icon: "fa-apple",
+                color: "text-red-500",
+                resourceWeights: { seed: 2, water: 2, fertilizer: 2 },
+                optimalRatio: { seed: 2, water: 3, fertilizer: 2 },
+                description: "蔬菜对各类资源需求均衡，但需要总量较多"
+            }
+        };
+        
+        // DOM 元素缓存
+        const elements = {
+            gameIntro: document.getElementById('game-intro'),
+            gameArea: document.getElementById('game-area'),
+            startGame: document.getElementById('start-game'),
+            backToDifficulty: document.getElementById('back-to-difficulty'),
+            difficultyLevels: document.querySelectorAll('.difficulty-level'),
+            seedTypes: document.querySelectorAll('.seed-type'),
+            seedSlider: document.getElementById('seed-slider'),
+            waterSlider: document.getElementById('water-slider'),
+            fertilizerSlider: document.getElementById('fertilizer-slider'),
+            seedValue: document.getElementById('seed-value'),
+            waterValue: document.getElementById('water-value'),
+            fertilizerValue: document.getElementById('fertilizer-value'),
+            resourceInfo: document.getElementById('resource-info'),
+            usedResources: document.getElementById('used-resources'),
+            totalResources: document.getElementById('total-resources'),
+            limitWarning: document.getElementById('limit-warning'),
+            hintContainer: document.getElementById('hint-container'),
+            hintText: document.getElementById('hint-text'),
+            solutionContainer: document.getElementById('solution-container'),
+            solutionText: document.getElementById('solution-text'),
+            showHint: document.getElementById('show-hint'),
+            showSolution: document.getElementById('show-solution'),
+            plantCrops: document.getElementById('plant-crops'),
+            farmDisplay: document.getElementById('farm-display'),
+            emptyFarm: document.getElementById('empty-farm'),
+            cropsContainer: document.getElementById('crops-container'),
+            growthScore: document.getElementById('growth-score'),
+            feedback: document.getElementById('feedback'),
+            tryAgain: document.getElementById('try-again'),
+            historyBody: document.getElementById('history-body'),
+            failedAttempts: document.getElementById('failed-attempts')
+        };
+        
+        // 游戏状态管理
+        const gameState = {
+            difficulty: 1,
+            totalResources: 20,
+            currentAttempt: 0,
+            history: [],
+            failedAttempts: 0,
+            selectedSeed: "wheat",
+            sliders: {
+                seed: 0,
+                water: 0,
+                fertilizer: 0
+            },
+            lastScore: 0,
+            lastResources: { seed: 0, water: 0, fertilizer: 0 },
+            solutionShown: false,
+            bestSolution: { seed: 0, water: 0, fertilizer: 0 },
+            
+            // 更新状态的方法
+            updateDifficulty(level) {
+                this.difficulty = level;
+                switch(level) {
+                    case 1: this.totalResources = 20; break;
+                    case 2: this.totalResources = 30; break;
+                    case 3: this.totalResources = 50; break;
+                }
+                elements.totalResources.textContent = this.totalResources;
+                this.solutionShown = false;
+                elements.solutionContainer.classList.add('hidden');
+                this.updateBestSolution();
+            },
+            
+            updateSelectedSeed(seed) {
+                this.selectedSeed = seed;
+                this.solutionShown = false;
+                elements.solutionContainer.classList.add('hidden');
+                this.updateBestSolution();
+            },
+            
+            updateBestSolution() {
+                const seedType = seedTypes[this.selectedSeed];
+                this.bestSolution = utils.calculateBestSolution(seedType, this.totalResources);
+            },
+            
+            updateSliders(seed, water, fertilizer) {
+                this.sliders = { seed, water, fertilizer };
+            },
+            
+            reset() {
+                this.currentAttempt = 0;
+                this.history = [];
+                this.failedAttempts = 0;
+                this.sliders = { seed: 0, water: 0, fertilizer: 0 };
+                this.selectedSeed = "wheat";
+                this.lastScore = 0;
+                this.lastResources = { seed: 0, water: 0, fertilizer: 0 };
+                this.solutionShown = false;
+                this.updateBestSolution();
+            }
+        };
+        
+        // 图表实例
+        let resultsChart;
+        
+        // 工具函数
+        const utils = {
+            /**
+             * 计算资源比例匹配得分
+             * 使用二次函数曲线，比例越接近最佳值，得分越高
+             */
+            calculateRatioScore(seed, water, fertilizer, totalUsed, ratios) {
+                const totalRatio = ratios.seed + ratios.water + ratios.fertilizer;
+                
+                // 计算实际比例
+                const actualSeedRatio = totalUsed > 0 ? seed / totalUsed : 0;
+                const actualWaterRatio = totalUsed > 0 ? water / totalUsed : 0;
+                const actualFertilizerRatio = totalUsed > 0 ? fertilizer / totalUsed : 0;
+                
+                // 计算理想比例
+                const idealSeedRatio = ratios.seed / totalRatio;
+                const idealWaterRatio = ratios.water / totalRatio;
+                const idealFertilizerRatio = ratios.fertilizer / totalRatio;
+                
+                // 计算每个资源的比例匹配度（0-1）
+                // 使用二次函数，差距越小得分越高
+                const seedRatioMatch = 1 - Math.pow(actualSeedRatio - idealSeedRatio, 2) * 4;
+                const waterRatioMatch = 1 - Math.pow(actualWaterRatio - idealWaterRatio, 2) * 4;
+                const fertilizerRatioMatch = 1 - Math.pow(actualFertilizerRatio - idealFertilizerRatio, 2) * 4;
+                
+                // 加权平均（考虑各资源的重要性权重）
+                const weights = seedTypes[gameState.selectedSeed].resourceWeights;
+                const weightSum = weights.seed + weights.water + weights.fertilizer;
+                
+                const weightedMatch = (
+                    seedRatioMatch * weights.seed +
+                    waterRatioMatch * weights.water +
+                    fertilizerRatioMatch * weights.fertilizer
+                ) / weightSum;
+                
+                // 比例得分占40分
+                return Math.max(0, weightedMatch * 40);
+            },
+            
+            /**
+             * 计算资源使用效率得分
+             * 鼓励充分利用资源，但避免过度集中在某一项
+             */
+            calculateEfficiencyScore(seed, water, fertilizer, totalUsed, totalResources) {
+                // 资源利用率（0-1）
+                const utilization = totalUsed / totalResources;
+                
+                // 资源分布均衡度（0-1）
+                // 使用标准差计算，值越小表示分布越均衡
+                const mean = totalUsed / 3;
+                const stdDev = Math.sqrt(
+                    (Math.pow(seed - mean, 2) + 
+                     Math.pow(water - mean, 2) + 
+                     Math.pow(fertilizer - mean, 2)) / 3
+                );
+                const balance = 1 - Math.min(1, stdDev / (totalResources / 3));
+                
+                // 效率得分 = 利用率 * 均衡度 * 30分
+                return utilization * balance * 30;
+            },
+            
+            /**
+             * 计算资源充足度得分
+             * 确保每种资源都有基本保障
+             */
+            calculateSufficiencyScore(seed, water, fertilizer, totalResources, weights) {
+                // 计算每种资源的充足度（相对于总资源和其重要性）
+                const seedSufficiency = Math.min(1, seed / (totalResources * weights.seed / 6));
+                const waterSufficiency = Math.min(1, water / (totalResources * weights.water / 6));
+                const fertilizerSufficiency = Math.min(1, fertilizer / (totalResources * weights.fertilizer / 6));
+                
+                // 充足度得分占30分，使用几何平均确保没有资源严重不足
+                return Math.pow(seedSufficiency * waterSufficiency * fertilizerSufficiency, 1/3) * 30;
+            },
+            
+            /**
+             * 综合得分计算
+             * 确保最佳方案能获得最高分数
+             */
+            calculateTotalScore(seed, water, fertilizer, seedType, totalResources) {
+                const totalUsed = seed + water + fertilizer;
+                
+                // 如果没有使用任何资源，得0分
+                if (totalUsed === 0) return 0;
+                
+                // 计算各项得分
+                const ratioScore = this.calculateRatioScore(seed, water, fertilizer, totalUsed, seedType.optimalRatio);
+                const efficiencyScore = this.calculateEfficiencyScore(seed, water, fertilizer, totalUsed, totalResources);
+                const sufficiencyScore = this.calculateSufficiencyScore(seed, water, fertilizer, totalResources, seedType.resourceWeights);
+                
+                // 计算总分
+                let totalScore = ratioScore + efficiencyScore + sufficiencyScore;
+                
+                // 对最佳方案进行微调，确保它获得最高分数
+                const isBestSolution = this.isBestSolution(seed, water, fertilizer);
+                if (isBestSolution) {
+                    // 确保最佳方案得分至少为95分
+                    totalScore = Math.max(95, totalScore);
+                }
+                
+                // 限制最高分100
+                return Math.min(100, Math.round(totalScore));
+            },
+            
+            // 获取资源名称
+            getResourceName(resource) {
+                const names = {
+                    seed: "种子",
+                    water: "水",
+                    fertilizer: "肥料"
+                };
+                return names[resource] || resource;
+            },
+            
+            // 计算最佳资源分配方案
+            calculateBestSolution(seedType, totalResources) {
+                const ratios = seedType.optimalRatio;
+                const totalRatio = ratios.seed + ratios.water + ratios.fertilizer;
+                
+                // 按最佳比例分配资源
+                let seed = Math.round((ratios.seed / totalRatio) * totalResources);
+                let water = Math.round((ratios.water / totalRatio) * totalResources);
+                let fertilizer = Math.round((ratios.fertilizer / totalRatio) * totalResources);
+                
+                // 确保总和不超过总资源，必要时调整
+                let total = seed + water + fertilizer;
+                if (total > totalResources) {
+                    const diff = total - totalResources;
+                    // 按比例减少
+                    seed = Math.max(0, seed - Math.round(seed / total * diff));
+                    water = Math.max(0, water - Math.round(water / total * diff));
+                    fertilizer = Math.max(0, fertilizer - Math.round(fertilizer / total * diff));
+                } else if (total < totalResources) {
+                    const diff = totalResources - total;
+                    // 按比例增加
+                    seed += Math.round(seed / total * diff) || 1;
+                    water += Math.round(water / total * diff) || 1;
+                    fertilizer += Math.round(fertilizer / total * diff) || 1;
+                }
+                
+                // 最终检查，确保总和正确
+                total = seed + water + fertilizer;
+                if (total !== totalResources) {
+                    const diff = totalResources - total;
+                    water += diff; // 微调水的数量以达到精确总和
+                }
+                
+                return { seed, water, fertilizer };
+            },
+            
+            // 检查当前分配是否为最佳方案（允许±1的误差）
+            isBestSolution(seed, water, fertilizer) {
+                const best = gameState.bestSolution;
+                return (
+                    Math.abs(seed - best.seed) <= 1 &&
+                    Math.abs(water - best.water) <= 1 &&
+                    Math.abs(fertilizer - best.fertilizer) <= 1
+                );
+            }
+        };
+        
+        // 初始化函数
+        function init() {
+            // 初始化事件监听器
+            initEventListeners();
+            
+            // 初始化图表
+            initChart();
+            
+            // 初始化最佳方案
+            gameState.updateBestSolution();
+        }
+        
+        // 初始化事件监听器
+        function initEventListeners() {
+            // 难度选择
+            elements.difficultyLevels.forEach(level => {
+                level.addEventListener('click', () => {
+                    elements.difficultyLevels.forEach(l => {
+                        l.classList.remove('border-primary');
+                        l.classList.add('border-gray-300');
+                    });
+                    
+                    level.classList.remove('border-gray-300');
+                    level.classList.add('border-primary');
+                    
+                    const levelValue = parseInt(level.dataset.level);
+                    gameState.updateDifficulty(levelValue);
+                    
+                    // 启用开始游戏按钮
+                    elements.startGame.disabled = false;
+                    elements.startGame.classList.remove('btn-disabled');
+                });
+            });
+            
+            // 种子类型选择
+            elements.seedTypes.forEach(seed => {
+                seed.addEventListener('click', () => {
+                    elements.seedTypes.forEach(s => {
+                        s.classList.remove('seed-type-selected');
+                        s.classList.add('border-gray-300');
+                    });
+                    
+                    seed.classList.add('seed-type-selected');
+                    seed.classList.remove('border-gray-300');
+                    
+                    gameState.updateSelectedSeed(seed.dataset.seed);
+                });
+            });
+            
+            // 开始游戏
+            elements.startGame.addEventListener('click', startGame);
+            
+            // 返回难度选择
+            elements.backToDifficulty.addEventListener('click', backToDifficulty);
+            
+            // 滑块事件
+            elements.seedSlider.addEventListener('input', updateSliderValues);
+            elements.waterSlider.addEventListener('input', updateSliderValues);
+            elements.fertilizerSlider.addEventListener('input', updateSliderValues);
+            
+            // 种植作物
+            elements.plantCrops.addEventListener('click', plantCrops);
+            
+            // 再试一次
+            elements.tryAgain.addEventListener('click', resetResources);
+            
+            // 显示提示
+            elements.showHint.addEventListener('click', showHint);
+            
+            // 显示最佳方案
+            elements.showSolution.addEventListener('click', showBestSolution);
+        }
+        
+        // 初始化图表
+        function initChart() {
+            const ctx = document.getElementById('results-chart').getContext('2d');
+            resultsChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['种子', '水', '肥料', '得分'],
+                    datasets: [{
+                        label: '资源分配与结果',
+                        data: [0, 0, 0, 0],
+                        backgroundColor: [
+                            'rgba(76, 175, 80, 0.6)',
+                            'rgba(33, 150, 243, 0.6)',
+                            'rgba(255, 152, 0, 0.6)',
+                            'rgba(156, 39, 176, 0.6)'
+                        ],
+                        borderColor: [
+                            'rgba(76, 175, 80, 1)',
+                            'rgba(33, 150, 243, 1)',
+                            'rgba(255, 152, 0, 1)',
+                            'rgba(156, 39, 176, 1)'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 100
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    }
+                }
+            });
+        }
+        
+        // 开始游戏
+        function startGame() {
+            elements.gameIntro.classList.add('hidden');
+            elements.gameArea.classList.remove('hidden');
+            elements.backToDifficulty.classList.remove('hidden');
+            
+            // 设置滑块最大值
+            elements.seedSlider.max = gameState.totalResources;
+            elements.waterSlider.max = gameState.totalResources;
+            elements.fertilizerSlider.max = gameState.totalResources;
+            
+            // 重置游戏状态
+            resetGame();
+        }
+        
+        // 返回难度选择页面
+        function backToDifficulty() {
+            elements.gameArea.classList.add('hidden');
+            elements.gameIntro.classList.remove('hidden');
+            elements.backToDifficulty.classList.add('hidden');
+            
+            // 重置游戏状态但保留难度选择
+            const currentDifficulty = gameState.difficulty;
+            gameState.reset();
+            gameState.updateDifficulty(currentDifficulty);
+            
+            // 保持难度选择状态
+            elements.difficultyLevels.forEach(l => {
+                l.classList.remove('border-primary');
+                l.classList.add('border-gray-300');
+            });
+            document.querySelector(`.difficulty-level[data-level="${currentDifficulty}"]`).classList.remove('border-gray-300');
+            document.querySelector(`.difficulty-level[data-level="${currentDifficulty}"]`).classList.add('border-primary');
+            
+            // 启用开始游戏按钮
+            elements.startGame.disabled = false;
+            elements.startGame.classList.remove('btn-disabled');
+        }
+        
+        // 更新滑块值显示
+        function updateSliderValues() {
+            // 获取当前滑块值
+            const seed = parseInt(elements.seedSlider.value);
+            const water = parseInt(elements.waterSlider.value);
+            const fertilizer = parseInt(elements.fertilizerSlider.value);
+            const totalUsed = seed + water + fertilizer;
+            
+            // 更新显示值
+            elements.seedValue.textContent = seed;
+            elements.waterValue.textContent = water;
+            elements.fertilizerValue.textContent = fertilizer;
+            elements.usedResources.textContent = totalUsed;
+            
+            // 更新游戏状态
+            gameState.updateSliders(seed, water, fertilizer);
+            
+            // 检查资源总和是否超过限制
+            if (totalUsed > gameState.totalResources) {
+                elements.limitWarning.classList.remove('hidden');
+                elements.plantCrops.disabled = true;
+                elements.plantCrops.classList.add('btn-disabled');
+            } else {
+                elements.limitWarning.classList.add('hidden');
+                elements.plantCrops.disabled = false;
+                elements.plantCrops.classList.remove('btn-disabled');
+            }
+            
+            // 如果显示了最佳方案，检查当前分配是否接近最佳方案
+            if (gameState.solutionShown) {
+                checkSolutionProximity();
+            }
+        }
+        
+        // 显示最佳方案
+        function showBestSolution() {
+            const seedType = seedTypes[gameState.selectedSeed];
+            const bestSolution = gameState.bestSolution;
+            
+            // 显示最佳方案
+            elements.solutionText.textContent = 
+                `最佳方案：种子${bestSolution.seed}，水${bestSolution.water}，肥料${bestSolution.fertilizer}`;
+            elements.solutionContainer.classList.remove('hidden');
+            
+            // 高亮显示滑块区域
+            elements.seedSlider.parentElement.classList.add('solution-highlight');
+            elements.waterSlider.parentElement.classList.add('solution-highlight');
+            elements.fertilizerSlider.parentElement.classList.add('solution-highlight');
+            
+            // 3秒后移除高亮动画
+            setTimeout(() => {
+                elements.seedSlider.parentElement.classList.remove('solution-highlight');
+                elements.waterSlider.parentElement.classList.remove('solution-highlight');
+                elements.fertilizerSlider.parentElement.classList.remove('solution-highlight');
+            }, 3000);
+            
+            // 更新游戏状态
+            gameState.solutionShown = true;
+            
+            // 检查当前分配与最佳方案的接近程度
+            checkSolutionProximity();
+        }
+        
+        // 检查当前分配与最佳方案的接近程度
+        function checkSolutionProximity() {
+            const bestSolution = gameState.bestSolution;
+            const current = gameState.sliders;
+            
+            // 计算差异
+            const seedDiff = Math.abs(current.seed - bestSolution.seed);
+            const waterDiff = Math.abs(current.water - bestSolution.water);
+            const fertilizerDiff = Math.abs(current.fertilizer - bestSolution.fertilizer);
+            const totalDiff = seedDiff + waterDiff + fertilizerDiff;
+            
+            // 如果非常接近最佳方案，给予鼓励
+            if (totalDiff <= 2) {
+                elements.hintText.textContent = "太棒了！你的分配非常接近最佳方案，试试种植吧！";
+                elements.hintContainer.classList.remove('hidden');
+                
+                // 5秒后隐藏提示
+                setTimeout(() => {
+                    elements.hintContainer.classList.add('hidden');
+                }, 5000);
+            }
+        }
+        
+        // 种植作物并计算结果
+        function plantCrops() {
+            // 防止重复点击
+            if (elements.plantCrops.disabled) return;
+            
+            // 获取当前种子类型特性
+            const seedType = seedTypes[gameState.selectedSeed];
+            
+            // 隐藏空农场提示
+            elements.emptyFarm.classList.add('hidden');
+            elements.cropsContainer.classList.remove('hidden');
+            
+            // 清空之前的作物
+            elements.cropsContainer.innerHTML = '';
+            
+            // 获取当前资源分配
+            const { seed, water, fertilizer } = gameState.sliders;
+            const totalUsed = seed + water + fertilizer;
+            
+            // 保存当前资源分配，用于后续提示
+            gameState.lastResources = { seed, water, fertilizer };
+            
+            // 计算生长得分 - 使用优化后的综合得分计算方法
+            const growthScore = utils.calculateTotalScore(seed, water, fertilizer, seedType, gameState.totalResources);
+            gameState.lastScore = growthScore;
+            
+            // 更新连续失败次数
+            if (growthScore < 60) {
+                gameState.failedAttempts++;
+                elements.failedAttempts.innerHTML = `<i class="fa fa-exclamation-circle mr-1"></i>连续失败: ${gameState.failedAttempts}次`;
+                elements.failedAttempts.classList.remove('hidden');
+                
+                // 多次失败自动显示提示
+                if (gameState.failedAttempts >= 3) {
+                    showHint();
+                }
+            } else {
+                gameState.failedAttempts = 0;
+                elements.failedAttempts.classList.add('hidden');
+                elements.hintContainer.classList.add('hidden');
+            }
+            
+            // 检查是否使用了最佳方案
+            const isBestSolution = utils.isBestSolution(seed, water, fertilizer);
+            if (isBestSolution) {
+                elements.feedback.innerHTML += `<p class="mt-2 text-solution font-bold">恭喜！你使用了最佳资源分配方案，获得了最高分数！</p>`;
+            }
+            
+            // 更新得分显示
+            elements.growthScore.textContent = growthScore;
+            
+            // 生成作物
+            generateCrops(growthScore, seedType);
+            
+            // 更新图表
+            updateChart(seed, water, fertilizer, growthScore);
+            
+            // 提供反馈
+            provideFeedback(seed, water, fertilizer, growthScore, totalUsed, seedType, isBestSolution);
+            
+            // 记录历史
+            recordHistory(seed, water, fertilizer, growthScore, seedType, isBestSolution);
+            
+            // 显示再试一次按钮
+            elements.tryAgain.classList.remove('hidden');
+        }
+        
+        // 生成作物
+        function generateCrops(score, seedType) {
+            // 根据得分生成不同数量和状态的作物
+            const cropCount = Math.max(3, Math.min(20, Math.round(score / 5)));
+            
+            for (let i = 0; i < cropCount; i++) {
+                // 随机位置
+                const left = Math.random() * 90 + 5; // 5% - 95%
+                const top = Math.random() * 90 + 5; // 5% - 95%
+                
+                // 根据总分确定作物大小和颜色（健康程度）
+                let size, color, animation;
+                
+                if (score >= 90) {
+                    size = Math.random() * 20 + 40; // 40-60px
+                    color = '#4CAF50'; // 深绿色
+                    animation = 'animate-bounce';
+                } else if (score >= 80) {
+                    size = Math.random() * 15 + 35; // 35-50px
+                    color = '#66BB6A'; // 绿色
+                    animation = 'animate-pulse';
+                } else if (score >= 60) {
+                    size = Math.random() * 15 + 30; // 30-45px
+                    color = '#8BC34A'; // 中等绿色
+                    animation = '';
+                } else if (score >= 50) {
+                    size = Math.random() * 10 + 25; // 25-35px
+                    color = '#CDDC39'; // 浅绿色
+                    animation = '';
+                } else if (score >= 30) {
+                    size = Math.random() * 10 + 20; // 20-30px
+                    color = '#FFC107'; // 黄色
+                    animation = '';
+                } else {
+                    size = Math.random() * 10 + 10; // 10-20px
+                    color = '#FF9800'; // 橙色
+                    animation = '';
+                }
+                
+                // 创建作物元素
+                const crop = document.createElement('div');
+                crop.className = `absolute transform -translate-x-1/2 -translate-y-1/2 transition-all duration-500 ${animation}`;
+                crop.style.left = `${left}%`;
+                crop.style.top = `${top}%`;
+                crop.style.fontSize = `${size}px`;
+                crop.style.color = color;
+                crop.innerHTML = `<i class="fa ${seedType.icon} ${seedType.color}"></i>`;
+                
+                // 添加到农场
+                elements.cropsContainer.appendChild(crop);
+            }
+        }
+        
+        // 更新图表
+        function updateChart(seed, water, fertilizer, score) {
+            if (resultsChart) {
+                resultsChart.data.datasets[0].data = [seed, water, fertilizer, score];
+                resultsChart.update();
+            }
+        }
+        
+        // 提供反馈
+        function provideFeedback(seed, water, fertilizer, score, totalUsed, seedType, isBestSolution) {
+            let feedbackText = `<p class="font-medium">你种植的是${seedType.name}，${seedType.description}。</p>`;
+            
+            if (isBestSolution) {
+                feedbackText += `<p class="mt-1 text-solution font-bold">完美！这是${seedType.name}的最佳资源分配方案，作物生长达到了最佳状态！</p>`;
+            } else if (score >= 90) {
+                feedbackText += `<p class="mt-1 text-green-700 font-bold">太棒了！你的资源分配非常合理，接近最佳方案，${seedType.name}长得非常好！</p>`;
+            } else if (score >= 80) {
+                feedbackText += `<p class="mt-1 text-green-600">非常好！${seedType.name}生长状况优良，再做些微调就能达到最佳状态。</p>`;
+            } else if (score >= 70) {
+                feedbackText += `<p class="mt-1 text-green-600">很好！${seedType.name}生长得不错。试着按照它的资源需求特性稍作调整，可能会有更好的结果。</p>`;
+            } else if (score >= 60) {
+                feedbackText += `<p class="mt-1 text-green-500">不错！${seedType.name}生长良好。参考它的资源需求特性进行优化可以获得更高分数。</p>`;
+            } else if (score >= 50) {
+                feedbackText += `<p class="mt-1 text-amber-600">还可以。${seedType.name}生长一般，它特别需要${seedType.resourceWeights.seed > seedType.resourceWeights.water && seedType.resourceWeights.seed > seedType.resourceWeights.fertilizer ? '种子' : seedType.resourceWeights.water > seedType.resourceWeights.seed && seedType.resourceWeights.water > seedType.resourceWeights.fertilizer ? '水' : '肥料'}，试着增加这方面的资源。</p>`;
+            } else if (score >= 30) {
+                feedbackText += `<p class="mt-1 text-orange-600">需要改进。${seedType.name}生长不太好，检查一下是不是它最需要的${seedType.resourceWeights.seed > seedType.resourceWeights.water && seedType.resourceWeights.seed > seedType.resourceWeights.fertilizer ? '种子' : seedType.resourceWeights.water > seedType.resourceWeights.seed && seedType.resourceWeights.water > seedType.resourceWeights.fertilizer ? '水' : '肥料'}太少了？</p>`;
+            } else {
+                feedbackText += `<p class="mt-1 text-red-600">再试一次！${seedType.name}生长很差，根据它的特性重新分配资源可能会更好。</p>`;
+            }
+            
+            // 资源使用情况反馈
+            if (totalUsed < gameState.totalResources * 0.5) {
+                feedbackText += `<p class="mt-2 text-blue-600 text-sm">你只使用了不到一半的资源，试着多分配一些资源给${seedType.name}。</p>`;
+            } else if (totalUsed < gameState.totalResources) {
+                feedbackText += `<p class="mt-2 text-blue-600 text-sm">你使用了${Math.round(totalUsed / gameState.totalResources * 100)}%的资源，可以考虑使用更多资源。</p>`;
+            }
+            
+            // 最佳比例提示
+            const ratios = seedType.optimalRatio;
+            const totalRatio = ratios.seed + ratios.water + ratios.fertilizer;
+            feedbackText += `<p class="mt-2 text-sm">${seedType.name}的最佳资源比例大约是${ratios.seed}:${ratios.water}:${ratios.fertilizer}（种子:水:肥料）。</p>`;
+            
+            elements.feedback.innerHTML = feedbackText;
+        }
+        
+        // 显示针对性提示
+        function showHint() {
+            const seedType = seedTypes[gameState.selectedSeed];
+            const { seed, water, fertilizer } = gameState.lastResources;
+            const totalUsed = seed + water + fertilizer;
+            const score = gameState.lastScore;
+            
+            // 计算最佳资源分配
+            const bestSolution = gameState.bestSolution;
+            
+            // 生成针对性提示
+            let hintText = "";
+            
+            // 资源使用不足的情况
+            if (totalUsed < gameState.totalResources * 0.7) {
+                hintText = `你只使用了${Math.round(totalUsed / gameState.totalResources * 100)}%的资源。${seedType.name}需要更多资源才能生长得更好，试着增加总资源使用量到至少${Math.round(gameState.totalResources * 0.7)}点。`;
+            } 
+            // 直接提示最佳方案的方向
+            else {
+                hintText = `对于${seedType.name}，更优的分配方案是增加${seed < bestSolution.seed ? '种子' : ''}${
+                    seed < bestSolution.seed && water < bestSolution.water ? '和' : ''
+                }${water < bestSolution.water ? '水' : ''}${
+                    (seed < bestSolution.seed || water < bestSolution.water) && fertilizer < bestSolution.fertilizer ? '和' : ''
+                }${fertilizer < bestSolution.fertilizer ? '肥料' : ''}的用量${
+                    seed > bestSolution.seed ? `，减少种子用量` : ''
+                }${water > bestSolution.water ? `，减少水用量` : ''}${fertilizer > bestSolution.fertilizer ? `，减少肥料用量` : ''}。`;
+            }
+            
+            // 显示提示
+            elements.hintText.textContent = hintText;
+            elements.hintContainer.classList.remove('hidden', 'opacity-70');
+            
+            // 8秒后轻微淡化提示
+            setTimeout(() => {
+                elements.hintContainer.classList.add('opacity-70');
+            }, 8000);
+        }
+        
+        // 记录历史
+        function recordHistory(seed, water, fertilizer, score, seedType, isBestSolution) {
+            gameState.currentAttempt++;
+            gameState.history.push({
+                attempt: gameState.currentAttempt,
+                seedType: seedType.name,
+                seed,
+                water,
+                fertilizer,
+                score,
+                success: score >= 60,
+                usedBestSolution: isBestSolution
+            });
+            
+            // 更新历史表格
+            updateHistoryTable();
+        }
+        
+        // 更新历史表格
+        function updateHistoryTable() {
+            // 如果是第一次记录，清空"暂无记录"行
+            if (gameState.history.length === 1) {
+                elements.historyBody.innerHTML = '';
+            }
+            
+            // 添加新记录
+            const newRow = document.createElement('tr');
+            newRow.className = 'hover:bg-gray-50 transition-colors';
+            
+            const lastRecord = gameState.history[gameState.history.length - 1];
+            let solutionIndicator = lastRecord.usedBestSolution ? 
+                '<span class="ml-1 hint-badge bg-solution/20 text-solution">最佳方案</span>' : '';
+                
+            newRow.innerHTML = `
+                <td class="py-2 px-4 border-b">${lastRecord.attempt}</td>
+                <td class="py-2 px-4 border-b">${lastRecord.seedType}${solutionIndicator}</td>
+                <td class="py-2 px-4 border-b">${lastRecord.seed}</td>
+                <td class="py-2 px-4 border-b">${lastRecord.water}</td>
+                <td class="py-2 px-4 border-b">${lastRecord.fertilizer}</td>
+                <td class="py-2 px-4 border-b font-semibold ${
+                    lastRecord.score >= 90 ? 'text-solution' :
+                    lastRecord.score >= 80 ? 'text-green-700' :
+                    lastRecord.score >= 60 ? 'text-green-500' :
+                    lastRecord.score >= 50 ? 'text-amber-600' : 'text-red-600'
+                }">${lastRecord.score}</td>
+                <td class="py-2 px-4 border-b">${
+                    lastRecord.success ? 
+                    '<span class="bg-green-100 text-green-800 text-xs font-medium px-2 py-0.5 rounded">成功</span>' : 
+                    '<span class="bg-red-100 text-red-800 text-xs font-medium px-2 py-0.5 rounded">需改进</span>'
+                }</td>
+            `;
+            
+            elements.historyBody.appendChild(newRow);
+        }
+        
+        // 重置资源分配
+        function resetResources() {
+            // 重置滑块
+            elements.seedSlider.value = 0;
+            elements.waterSlider.value = 0;
+            elements.fertilizerSlider.value = 0;
+            
+            // 更新显示
+            updateSliderValues();
+            
+            // 清空农场
+            elements.cropsContainer.innerHTML = '';
+            elements.emptyFarm.classList.remove('hidden');
+            elements.cropsContainer.classList.add('hidden');
+            
+            // 隐藏再试一次按钮
+            elements.tryAgain.classList.add('hidden');
+        }
+        
+        // 重置整个游戏
+        function resetGame() {
+            gameState.reset();
+            
+            // 重置种子选择样式
+            elements.seedTypes.forEach(s => {
+                s.classList.remove('seed-type-selected');
+                s.classList.add('border-gray-300');
+            });
+            document.querySelector(`.seed-type[data-seed="wheat"]`).classList.add('seed-type-selected');
+            document.querySelector(`.seed-type[data-seed="wheat"]`).classList.remove('border-gray-300');
+            
+            // 重置UI
+            resetResources();
+            elements.historyBody.innerHTML = '<tr><td colspan="7" class="py-4 text-center text-gray-500">暂无记录</td></tr>';
+            elements.feedback.innerHTML = '<p class="text-center text-gray-500">种植作物后查看分析结果</p>';
+            elements.hintContainer.classList.add('hidden');
+            elements.solutionContainer.classList.add('hidden');
+            elements.failedAttempts.classList.add('hidden');
+            elements.hintContainer.classList.remove('opacity-70');
+            
+            // 重置图表
+            if (resultsChart) {
+                resultsChart.data.datasets[0].data = [0, 0, 0, 0];
+                resultsChart.update();
+            }
+        }
+        
+        // 页面加载完成后初始化游戏
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>

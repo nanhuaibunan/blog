@@ -1,0 +1,1642 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>班级财富大亨 - 完整版</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            font-family: 'Microsoft YaHei', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            overflow: hidden;
+        }
+        .header {
+            background: linear-gradient(135deg, #4CAF50, #45a049);
+            color: white;
+            padding: 20px;
+            text-align: center;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .header h1 {
+            margin: 0;
+        }
+        .tabs {
+            display: flex;
+            background: #f5f5f5;
+            border-bottom: 2px solid #ddd;
+        }
+        .tab {
+            padding: 15px 20px;
+            cursor: pointer;
+            border-right: 1px solid #ddd;
+            transition: all 0.3s;
+        }
+        .tab.active {
+            background: white;
+            border-bottom: 3px solid #4CAF50;
+            font-weight: bold;
+        }
+        .tab-content {
+            display: none;
+            padding: 20px;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        .control-panel {
+            background: #e3f2fd;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 10px;
+            border-left: 4px solid #2196F3;
+        }
+        .student-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .student-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            transition: all 0.3s;
+        }
+        .student-card.danger {
+            border: 2px solid red;
+            animation: flash 1s infinite alternate;
+        }
+        .danger-alert {
+            background-color: red;
+            color: white;
+            padding: 5px;
+            border-radius: 3px;
+            text-align: center;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        @keyframes flash {
+            from { opacity: 1; }
+            to { opacity: 0.8; }
+        }
+        .student-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .student-name {
+            font-size: 1.3em;
+            font-weight: bold;
+        }
+        .coin-display {
+            font-size: 1.8em;
+            font-weight: bold;
+            text-align: center;
+            margin: 10px 0;
+        }
+        .budget-section, .investment-section, .loan-section, .status-section {
+            background: rgba(255,255,255,0.1);
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        .progress-bar {
+            background: #ddd;
+            border-radius: 10px;
+            height: 10px;
+            margin: 5px 0;
+            overflow: hidden;
+        }
+        .progress-fill {
+            height: 100%;
+            background: #4CAF50;
+            transition: width 0.3s;
+        }
+        .progress-fill.mood { background: #2196F3; }
+        .progress-fill.hunger { background: #ff9800; }
+        .progress-fill.health { background: #4CAF50; }
+        .progress-fill.energy { background: #9C27B0; }
+        .progress-fill.warning { background: #ff9800; }
+        .progress-fill.danger { background: #f44336; }
+        button {
+            padding: 8px 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 2px;
+            font-size: 12px;
+            transition: all 0.3s;
+        }
+        .btn-success { background: #4CAF50; color: white; }
+        .btn-danger { background: #f44336; color: white; }
+        .btn-warning { background: #ff9800; color: white; }
+        .btn-info { background: #2196F3; color: white; }
+        .btn-primary { background: #673ab7; color: white; }
+        button:hover { transform: translateY(-2px); }
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .event-log {
+            background: #f9f9f9;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 10px;
+            max-height: 200px;
+            overflow-y: auto;
+            font-size: 12px;
+        }
+        .market-status {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 5px;
+            padding: 10px;
+            margin: 10px 0;
+        }
+        .summary-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        .summary-card {
+            background: linear-gradient(135deg, #74b9ff, #0984e3);
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+        }
+        .decision-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 10px;
+        }
+        .decision-btn {
+            flex: 1 0 120px;
+            padding: 10px;
+            font-size: 14px;
+            text-align: center;
+        }
+        /* 通知样式 */
+        .notification {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            padding: 12px 20px;
+            border-radius: 6px;
+            color: white;
+            z-index: 1000;
+            opacity: 0;
+            transition: opacity 0.3s, transform 0.3s;
+            transform: translateY(20px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        .notification.success { background-color: #4CAF50; }
+        .notification.error { background-color: #f44336; }
+        .notification.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        /* 游戏结束充值面板 */
+        .game-over-recharge-panel {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            z-index: 1001;
+            text-align: center;
+            width: 80%;
+            max-width: 500px;
+        }
+        .game-over-recharge-panel.active {
+            display: block;
+        }
+        .overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+        }
+        .overlay.active {
+            display: block;
+        }
+        /* 预算输入表单 */
+        .budget-form {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        .budget-form label {
+            display: flex;
+            flex-direction: column;
+            font-size: 14px;
+        }
+        .budget-form input {
+            padding: 5px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin-top: 3px;
+        }
+        .budget-form .form-actions {
+            grid-column: span 2;
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+        }
+        /* 预算完成度样式 */
+        .budget-category {
+            margin-bottom: 8px;
+        }
+        .budget-label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 14px;
+        }
+        .budget-actual {
+            font-weight: bold;
+        }
+        .budget-percentage {
+            font-size: 12px;
+            margin-left: 5px;
+        }
+        /* 月度预算表格 */
+        .budget-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        .budget-table th, .budget-table td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        .budget-table th {
+            background-color: #f2f2f2;
+            color: #333;
+        }
+        .budget-table tr:nth-child(even) {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+        @media (max-width: 768px) {
+            .tabs { flex-direction: column; }
+            .student-grid { grid-template-columns: 1fr; }
+            .summary-cards { grid-template-columns: 1fr; }
+            .budget-form { grid-template-columns: 1fr; }
+            .budget-form .form-actions { grid-column: span 1; }
+            .header { flex-direction: column; gap: 10px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🏦 班级财富大亨 - 完整版 🏦</h1>
+            <div>
+                <button class="btn-danger" onclick="resetGame()">重置游戏</button>
+            </div>
+        </div>
+
+        <div class="tabs">
+            <div class="tab active" onclick="switchTab('basic')">基础金币管理</div>
+            <div class="tab" onclick="switchTab('budget')">月度预算规划</div>
+            <div class="tab" onclick="switchTab('investment')">投资与贷款</div>
+            <div class="tab" onclick="switchTab('events')">随机事件</div>
+            <div class="tab" onclick="switchTab('reports')">财务报告</div>
+        </div>
+
+        <!-- 基础金币管理 -->
+        <div id="basic" class="tab-content active">
+            <div class="control-panel">
+                <h3>💰 基础操作</h3>
+                <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px;">
+                    <input type="text" id="studentName" placeholder="学生姓名" maxlength="10">
+                    <button class="btn-success" onclick="addStudent()">添加学生</button>
+                    <select id="allStudents">
+                        <option value="">选择学生</option>
+                    </select>
+                    <input type="number" id="amount" placeholder="数量" value="10" min="1">
+                    <button class="btn-success" onclick="giveCoinsToSelected()">给予金币</button>
+                    <button class="btn-danger" onclick="takeCoinsFromSelected()">扣除金币</button>
+                    <button class="btn-primary" onclick="rechargeCoins()">充值金币</button>
+                    <button class="btn-warning" onclick="nextMonth()">进入下个月</button>
+                </div>
+            </div>
+            <div class="student-grid" id="basicStudentsContainer"></div>
+        </div>
+
+        <!-- 月度预算规划 -->
+        <div id="budget" class="tab-content">
+            <div class="control-panel">
+                <h3>📊 预算管理系统</h3>
+                <div>
+                    <select id="budgetStudentSelect">
+                        <option value="">选择学生</option>
+                    </select>
+                    <button class="btn-info" onclick="showBudgetForm()">设置月度预算</button>
+                    <button class="btn-warning" onclick="recordTransaction()">记录实际支出</button>
+                    <button class="btn-success" onclick="calculateBudgetCompletion()">计算完成度</button>
+                </div>
+                
+                <!-- 预算输入表单 -->
+                <div id="budgetFormContainer" class="budget-form" style="display: none; margin-top: 15px;">
+                    <label>
+                        收入预算:
+                        <input type="number" id="incomeBudget" placeholder="收入预算" min="0">
+                    </label>
+                    <label>
+                        固定支出预算:
+                        <input type="number" id="fixedExpensesBudget" placeholder="固定支出预算" min="0">
+                    </label>
+                    <label>
+                        浮动支出预算:
+                        <input type="number" id="variableExpensesBudget" placeholder="浮动支出预算" min="0">
+                    </label>
+                    <label>
+                        自由支配预算:
+                        <input type="number" id="discretionaryBudget" placeholder="自由支配预算" min="0">
+                    </label>
+                    <label>
+                        储蓄预算:
+                        <input type="number" id="savingsBudget" placeholder="储蓄预算" min="0">
+                    </label>
+                    <div class="form-actions">
+                        <button class="btn-success" onclick="saveBudget()">保存预算</button>
+                        <button class="btn-danger" onclick="hideBudgetForm()">取消</button>
+                    </div>
+                </div>
+                
+                <!-- 实际支出记录表单 -->
+                <div id="transactionFormContainer" class="budget-form" style="display: none; margin-top: 15px;">
+                    <label>
+                        固定支出:
+                        <input type="number" id="actualFixed" placeholder="实际固定支出" min="0">
+                    </label>
+                    <label>
+                        浮动支出:
+                        <input type="number" id="actualVariable" placeholder="实际浮动支出" min="0">
+                    </label>
+                    <label>
+                        自由支配:
+                        <input type="number" id="actualDiscretionary" placeholder="实际自由支配" min="0">
+                    </label>
+                    <label>
+                        收入:
+                        <input type="number" id="actualIncome" placeholder="实际收入" min="0">
+                    </label>
+                    <div class="form-actions">
+                        <button class="btn-success" onclick="saveTransaction()">保存记录</button>
+                        <button class="btn-danger" onclick="hideTransactionForm()">取消</button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 预算完成度表格 -->
+            <div id="budgetCompletionTable" style="display: none; margin-top: 20px;">
+                <h3>📊 预算完成度</h3>
+                <table class="budget-table">
+                    <thead>
+                        <tr>
+                            <th>学生</th>
+                            <th>类别</th>
+                            <th>预算</th>
+                            <th>实际</th>
+                            <th>完成度</th>
+                            <th>状态</th>
+                        </tr>
+                    </thead>
+                    <tbody id="budgetCompletionBody">
+                        <!-- 预算完成度数据将在这里显示 -->
+                    </tbody>
+                </table>
+            </div>
+            
+            <div class="student-grid" id="budgetStudentsContainer"></div>
+        </div>
+
+        <!-- 投资与贷款 -->
+        <div id="investment" class="tab-content">
+            <div class="control-panel">
+                <h3>📈 投资与贷款系统</h3>
+                <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                    <select id="investStudent">
+                        <option value="">选择学生</option>
+                    </select>
+                    <input type="number" id="investAmount" placeholder="金额" value="50" min="10">
+                    <button class="btn-success" onclick="makeInvestment()">进行投资</button>
+                    <button class="btn-warning" onclick="takeLoan()">申请贷款</button>
+                    <button class="btn-info" onclick="calculateInterest()">计算复利</button>
+                </div>
+            </div>
+            <div class="market-status" id="marketStatus">
+                市场状态: 平稳 📊
+            </div>
+            <div class="student-grid" id="investmentStudentsContainer"></div>
+        </div>
+
+        <!-- 随机事件 -->
+        <div id="events" class="tab-content">
+            <div class="control-panel">
+                <h3>🎲 命运骰子事件</h3>
+                <button class="btn-warning" onclick="rollDiceForAll()">为所有学生掷骰子</button>
+                <button class="btn-info" onclick="rollDiceForSelected()">为选中学生掷骰子</button>
+                <span id="diceResult" style="margin-left: 20px; font-weight: bold;"></span>
+            </div>
+            <div class="event-log" id="eventLog">
+                <!-- 事件日志将在这里显示 -->
+            </div>
+            <div class="student-grid" id="eventStudentsContainer"></div>
+        </div>
+
+        <!-- 财务报告 -->
+        <div id="reports" class="tab-content">
+            <div class="control-panel">
+                <h3>📋 月度财务报告</h3>
+                <button class="btn-info" onclick="generateReports()">生成报告</button>
+                <button class="btn-warning" onclick="resetMonth()">重置本月数据</button>
+            </div>
+            <div class="summary-cards" id="summaryCards"></div>
+            <div id="detailedReports"></div>
+        </div>
+    </div>
+
+    <!-- 游戏结束充值面板 -->
+    <div class="overlay" id="overlay"></div>
+    <div class="game-over-recharge-panel" id="gameOverRechargePanel">
+        <h2>游戏已结束</h2>
+        <p>您可以继续为学生充值金币</p>
+        <select id="rechargeStudentSelect">
+            <option value="">选择学生</option>
+        </select>
+        <input type="number" id="rechargeAmountInput" placeholder="充值金额" value="50" min="1">
+        <button class="btn-primary" onclick="rechargeCoinsAfterGameOver()">确认充值</button>
+        <button class="btn-danger" onclick="closeRechargePanel()">关闭</button>
+    </div>
+
+    <script>
+        // 游戏状态与数据
+        let students = [];
+        let currentMonth = 1;
+        let marketTrend = 0; // 市场趋势：-1下跌，0平稳，1上涨
+        let gameOver = false; // 游戏状态标记
+        const MONTHLY_LIVING_COST = 100; // 每月生活消耗金币数量
+        let selectedBudgetStudentIndex = -1; // 当前选中的预算学生索引
+
+        // DOM元素缓存
+        const elements = {
+            studentNameInput: document.getElementById('studentName'),
+            allStudentsSelect: document.getElementById('allStudents'),
+            amountInput: document.getElementById('amount'),
+            investStudentSelect: document.getElementById('investStudent'),
+            investAmountInput: document.getElementById('investAmount'),
+            diceResultSpan: document.getElementById('diceResult'),
+            eventLogDiv: document.getElementById('eventLog'),
+            marketStatusDiv: document.getElementById('marketStatus'),
+            summaryCardsDiv: document.getElementById('summaryCards'),
+            detailedReportsDiv: document.getElementById('detailedReports'),
+            basicStudentsContainer: document.getElementById('basicStudentsContainer'),
+            budgetStudentsContainer: document.getElementById('budgetStudentsContainer'),
+            investmentStudentsContainer: document.getElementById('investmentStudentsContainer'),
+            eventStudentsContainer: document.getElementById('eventStudentsContainer'),
+            // 游戏结束充值面板元素
+            overlay: document.getElementById('overlay'),
+            gameOverRechargePanel: document.getElementById('gameOverRechargePanel'),
+            rechargeStudentSelect: document.getElementById('rechargeStudentSelect'),
+            rechargeAmountInput: document.getElementById('rechargeAmountInput'),
+            // 预算相关元素
+            budgetStudentSelect: document.getElementById('budgetStudentSelect'),
+            budgetFormContainer: document.getElementById('budgetFormContainer'),
+            incomeBudgetInput: document.getElementById('incomeBudget'),
+            fixedExpensesBudgetInput: document.getElementById('fixedExpensesBudget'),
+            variableExpensesBudgetInput: document.getElementById('variableExpensesBudget'),
+            discretionaryBudgetInput: document.getElementById('discretionaryBudget'),
+            savingsBudgetInput: document.getElementById('savingsBudget'),
+            transactionFormContainer: document.getElementById('transactionFormContainer'),
+            actualFixedInput: document.getElementById('actualFixed'),
+            actualVariableInput: document.getElementById('actualVariable'),
+            actualDiscretionaryInput: document.getElementById('actualDiscretionary'),
+            actualIncomeInput: document.getElementById('actualIncome'),
+            budgetCompletionTable: document.getElementById('budgetCompletionTable'),
+            budgetCompletionBody: document.getElementById('budgetCompletionBody')
+        };
+
+        // 初始化页面 - 从本地存储加载数据
+        function initPage() {
+            // 尝试从本地存储加载数据
+            const savedData = localStorage.getItem('classroomWealth');
+            const savedMonth = localStorage.getItem('currentMonth');
+            
+            if (savedData) {
+                try {
+                    students = JSON.parse(savedData);
+                } catch (e) {
+                    console.error('加载数据失败:', e);
+                    students = [];
+                }
+            } else {
+                students = [];
+            }
+            
+            if (savedMonth) {
+                currentMonth = parseInt(savedMonth);
+            } else {
+                currentMonth = 1;
+            }
+            
+            // 更新界面显示
+            updateAllDisplays();
+            updateStudentSelects();
+            updateMarketStatus();
+        }
+
+        // 重置游戏
+        function resetGame() {
+            if (confirm('确定要重置游戏吗？这将清除所有游戏数据并重新开始！')) {
+                // 清除本地存储数据
+                clearLocalStorage();
+                
+                // 初始化游戏数据
+                resetGameData();
+                
+                // 更新界面显示
+                updateAllDisplays();
+                updateStudentSelects();
+                updateMarketStatus();
+                
+                // 隐藏所有表单和面板
+                elements.budgetFormContainer.style.display = 'none';
+                elements.transactionFormContainer.style.display = 'none';
+                elements.budgetCompletionTable.style.display = 'none';
+                elements.overlay.classList.remove('active');
+                elements.gameOverRechargePanel.classList.remove('active');
+                
+                // 清空事件日志
+                elements.eventLogDiv.innerHTML = '';
+                
+                // 显示通知
+                showNotification('游戏已重置为初始状态！', 'success');
+            }
+        }
+
+        // 清除本地存储数据
+        function clearLocalStorage() {
+            localStorage.removeItem('classroomWealth');
+            localStorage.removeItem('currentMonth');
+        }
+
+        // 重置游戏数据
+        function resetGameData() {
+            students = [];
+            currentMonth = 1;
+            marketTrend = 0;
+            gameOver = false;
+            selectedBudgetStudentIndex = -1;
+        }
+
+        // 添加学生函数
+        function addStudent() {
+            if (gameOver) return showNotification('游戏已结束，无法添加学生！', 'error');
+            
+            const nameInput = elements.studentNameInput;
+            const name = nameInput.value.trim();
+            
+            // 验证输入
+            if (!name) {
+                showNotification('请输入学生姓名！', 'error');
+                nameInput.focus();
+                return;
+            }
+            
+            // 检查是否重名
+            if (students.some(s => s.name === name)) {
+                showNotification('该学生已存在！', 'error');
+                nameInput.select();
+                return;
+            }
+            
+            // 创建新学生对象
+            const newStudent = createNewStudent(name);
+            
+            // 添加到数组并保存
+            students.push(newStudent);
+            saveData();
+            
+            // 清空输入框并显示成功提示
+            nameInput.value = '';
+            showNotification(`学生"${name}"已成功添加！`, 'success');
+            
+            // 更新界面
+            updateAllDisplays();
+            updateStudentSelects();
+        }
+
+        // 创建新学生数据结构
+        function createNewStudent(name) {
+            return {
+                name: name,
+                coins: 100,
+                history: [`${new Date().toLocaleDateString()} - 初始获得100金币`],
+                budget: {
+                    income: 0,
+                    fixedExpenses: 0,
+                    variableExpenses: 0,
+                    discretionary: 0,
+                    savings: 0,
+                    actualSpending: { fixed: 0, variable: 0, discretionary: 0, income: 0 }
+                },
+                investments: [],
+                loans: [],
+                monthlyData: [],
+                status: {
+                    mood: 70,
+                    hunger: 60,
+                    health: 80,
+                    energy: 75
+                },
+                decisionPoints: 10 // 每月10个决策点
+            };
+        }
+
+        // 显示通知
+        function showNotification(message, type = 'info') {
+            // 创建通知元素
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`;
+            notification.textContent = message;
+            
+            // 添加到页面
+            document.body.appendChild(notification);
+            
+            // 显示通知
+            setTimeout(() => {
+                notification.classList.add('show');
+            }, 10);
+            
+            // 3秒后自动消失
+            setTimeout(() => {
+                notification.classList.remove('show');
+                setTimeout(() => {
+                    document.body.removeChild(notification);
+                }, 300);
+            }, 3000);
+        }
+
+        // 充值功能 - 修改为即使游戏结束也能使用
+        function rechargeCoins() {
+            if (gameOver) {
+                // 游戏结束时显示专门的充值面板
+                openRechargePanel();
+                return;
+            }
+            
+            const selectedIndex = elements.allStudentsSelect.selectedIndex - 1;
+            if (selectedIndex < 0) return showNotification('请先选择学生！', 'error');
+            
+            const amountStr = prompt('请输入充值金额:', '50');
+            if (!amountStr) return;
+            
+            const amount = parseInt(amountStr);
+            if (isNaN(amount) || amount <= 0) return showNotification('请输入有效金额！', 'error');
+            
+            giveCoins(selectedIndex, amount, '充值');
+            logEvent(`${students[selectedIndex].name} 充值了 ${amount} 金币！`);
+        }
+
+        // 游戏结束后打开充值面板
+        function openRechargePanel() {
+            // 更新充值学生选择下拉框
+            updateRechargeStudentSelect();
+            
+            // 显示充值面板和遮罩层
+            elements.overlay.classList.add('active');
+            elements.gameOverRechargePanel.classList.add('active');
+        }
+
+        // 更新充值学生选择下拉框
+        function updateRechargeStudentSelect() {
+            elements.rechargeStudentSelect.innerHTML = '<option value="">选择学生</option>';
+            students.forEach(student => {
+                elements.rechargeStudentSelect.innerHTML += `<option value="${student.name}">${student.name}</option>`;
+            });
+        }
+
+        // 关闭充值面板
+        function closeRechargePanel() {
+            elements.overlay.classList.remove('active');
+            elements.gameOverRechargePanel.classList.remove('active');
+        }
+
+        // 游戏结束后执行充值
+        function rechargeCoinsAfterGameOver() {
+            const selectedName = elements.rechargeStudentSelect.value;
+            const studentIndex = students.findIndex(s => s.name === selectedName);
+            const amount = parseInt(elements.rechargeAmountInput.value);
+            
+            if (studentIndex < 0) return showNotification('请先选择学生！', 'error');
+            if (isNaN(amount) || amount <= 0) return showNotification('请输入有效金额！', 'error');
+            
+            // 直接给予金币，不检查游戏状态
+            const intAmount = Math.floor(amount);
+            students[studentIndex].coins += intAmount;
+            
+            const message = `${new Date().toLocaleDateString()} - 获得${intAmount}金币 (充值)`;
+            students[studentIndex].history.push(message);
+            
+            saveData();
+            showNotification(`${students[studentIndex].name} 已成功充值 ${amount} 金币！`, 'success');
+            
+            // 更新最终结果显示
+            showFinalResults();
+            
+            // 关闭充值面板
+            closeRechargePanel();
+        }
+
+        // 金币操作函数
+        function giveCoins(studentIndex, amount, reason = '') {
+            if (!gameOver && checkGameOver()) return;
+            if (!amount || amount <= 0) return;
+            
+            const intAmount = Math.floor(amount);
+            students[studentIndex].coins += intAmount;
+            
+            const message = `${new Date().toLocaleDateString()} - 获得${intAmount}金币${reason ? ' (' + reason + ')' : ''}`;
+            students[studentIndex].history.push(message);
+            
+            saveData();
+            updateAllDisplays();
+        }
+
+        function takeCoins(studentIndex, amount, reason = '') {
+            if (!gameOver && checkGameOver()) return;
+            if (!amount || amount <= 0) return;
+            
+            const intAmount = Math.floor(amount);
+            const actualAmount = Math.min(intAmount, students[studentIndex].coins);
+            students[studentIndex].coins -= actualAmount;
+            
+            const message = `${new Date().toLocaleDateString()} - 支出${actualAmount}金币${reason ? ' (' + reason + ')' : ''}`;
+            students[studentIndex].history.push(message);
+            
+            saveData();
+            updateAllDisplays();
+        }
+
+        // 更新学生状态
+        function updateStatus(studentIndex, type, value) {
+            if (!gameOver && checkGameOver()) return;
+            students[studentIndex].status[type] = Math.max(0, Math.min(100, value));
+            saveData();
+            updateAllDisplays();
+        }
+
+        // 检查游戏失败条件
+        function checkGameOver() {
+            if (gameOver) return true;
+            
+            for (const student of students) {
+                const isEnergyZero = student.status.energy <= 0;
+                const isHungerZero = student.status.hunger <= 0;
+                const hasNoDecisionPoints = student.decisionPoints <= 0;
+                const hasNoCoins = student.coins < 0; // 金币不足也是游戏结束条件
+                
+                if ((isEnergyZero || isHungerZero) && hasNoDecisionPoints || hasNoCoins) {
+                    gameOver = true;
+                    showNotification(`游戏结束！${student.name} 无法继续游戏！`, 'error');
+                    showFinalResults();
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        // 执行决策
+        function makeDecision(studentIndex, decision) {
+            if (gameOver) return;
+            
+            const student = students[studentIndex];
+            
+            // 检查是否有足够的决策点
+            if (student.decisionPoints <= 0) {
+                showNotification('本月决策点已用完！', 'error');
+                checkGameOver();
+                return;
+            }
+            
+            // 根据状态限制可用决策
+            if (student.status.energy <= 0 && decision !== 'rest') {
+                showNotification('精力不足！只能选择好好休息恢复精力。', 'error');
+                return;
+            }
+            
+            if (student.status.hunger <= 0 && decision !== 'eatGood') {
+                showNotification('太饿了！必须先吃一顿好的补充能量。', 'error');
+                return;
+            }
+            
+            // 消耗一个决策点
+            student.decisionPoints--;
+            
+            switch(decision) {
+                case 'eatGood':
+                    takeCoins(studentIndex, 15, '吃一顿好的');
+                    updateStatus(studentIndex, 'mood', student.status.mood + 20);
+                    updateStatus(studentIndex, 'hunger', student.status.hunger + 30);
+                    logEvent(`${student.name} 吃了一顿好的，心情和饱腹值上升！`);
+                    break;
+                    
+                case 'studyHard':
+                    updateStatus(studentIndex, 'energy', student.status.energy - 25);
+                    updateStatus(studentIndex, 'mood', student.status.mood - 10);
+                    giveCoins(studentIndex, 10, '努力学习获得奖励');
+                    logEvent(`${student.name} 努力学习，获得了金币奖励！`);
+                    break;
+                    
+                case 'exercise':
+                    updateStatus(studentIndex, 'health', student.status.health + 20);
+                    updateStatus(studentIndex, 'energy', student.status.energy - 15);
+                    takeCoins(studentIndex, 5, '运动支出');
+                    logEvent(`${student.name} 进行了锻炼，健康状况提升！`);
+                    break;
+                    
+                case 'socialize':
+                    takeCoins(studentIndex, 10, '社交活动');
+                    updateStatus(studentIndex, 'mood', student.status.mood + 25);
+                    updateStatus(studentIndex, 'health', student.status.health - 5);
+                    logEvent(`${student.name} 参加了社交活动，心情愉悦！`);
+                    break;
+                    
+                case 'rest':
+                    updateStatus(studentIndex, 'energy', student.status.energy + 40);
+                    updateStatus(studentIndex, 'mood', student.status.mood + 10);
+                    logEvent(`${student.name} 好好休息了一天，精力充沛！`);
+                    break;
+                    
+                case 'partTime':
+                    giveCoins(studentIndex, 20, '兼职收入');
+                    updateStatus(studentIndex, 'energy', student.status.energy - 30);
+                    updateStatus(studentIndex, 'health', student.status.health - 10);
+                    logEvent(`${student.name} 做了兼职工作，赚到了金币！`);
+                    break;
+            }
+            
+            saveData();
+            updateAllDisplays();
+            
+            // 决策后检查游戏失败条件
+            checkGameOver();
+        }
+
+        // 预算规划功能 - 显示预算表单
+        function showBudgetForm() {
+            if (gameOver) return showNotification('游戏已结束，无法设置预算！', 'error');
+            
+            const studentName = elements.budgetStudentSelect.value;
+            const studentIndex = students.findIndex(s => s.name === studentName);
+            
+            if (studentIndex < 0) return showNotification('请先选择学生！', 'error');
+            
+            selectedBudgetStudentIndex = studentIndex;
+            const student = students[studentIndex];
+            
+            // 填充表单值（如果已有预算）
+            elements.incomeBudgetInput.value = student.budget.income || '';
+            elements.fixedExpensesBudgetInput.value = student.budget.fixedExpenses || '';
+            elements.variableExpensesBudgetInput.value = student.budget.variableExpenses || '';
+            elements.discretionaryBudgetInput.value = student.budget.discretionary || '';
+            elements.savingsBudgetInput.value = student.budget.savings || '';
+            
+            // 显示表单
+            elements.budgetFormContainer.style.display = 'grid';
+            elements.transactionFormContainer.style.display = 'none';
+        }
+
+        // 隐藏预算表单
+        function hideBudgetForm() {
+            elements.budgetFormContainer.style.display = 'none';
+        }
+
+        // 保存预算
+        function saveBudget() {
+            if (selectedBudgetStudentIndex < 0) return;
+            
+            const student = students[selectedBudgetStudentIndex];
+            const income = parseInt(elements.incomeBudgetInput.value) || 0;
+            const fixedExpenses = parseInt(elements.fixedExpensesBudgetInput.value) || 0;
+            const variableExpenses = parseInt(elements.variableExpensesBudgetInput.value) || 0;
+            const discretionary = parseInt(elements.discretionaryBudgetInput.value) || 0;
+            const savings = parseInt(elements.savingsBudgetInput.value) || 0;
+            
+            // 检查预算是否平衡
+            const totalExpenses = fixedExpenses + variableExpenses + discretionary + savings;
+            if (income < totalExpenses) {
+                return showNotification('预算不平衡！收入小于总支出。', 'error');
+            }
+            
+            // 保存预算
+            student.budget = {
+                income: income,
+                fixedExpenses: fixedExpenses,
+                variableExpenses: variableExpenses,
+                discretionary: discretionary,
+                savings: savings,
+                actualSpending: student.budget.actualSpending || { fixed: 0, variable: 0, discretionary: 0, income: 0 }
+            };
+            
+            saveData();
+            showNotification(`${student.name} 的月度预算已设置完成！`, 'success');
+            hideBudgetForm();
+            updateAllDisplays();
+        }
+
+        // 记录实际支出 - 显示表单
+        function recordTransaction() {
+            if (gameOver) return showNotification('游戏已结束，无法记录交易！', 'error');
+            
+            const studentName = elements.budgetStudentSelect.value;
+            const studentIndex = students.findIndex(s => s.name === studentName);
+            
+            if (studentIndex < 0) return showNotification('请先选择学生！', 'error');
+            
+            // 检查是否已设置预算
+            if (students[studentIndex].budget.income === 0) {
+                return showNotification('请先为该学生设置月度预算！', 'error');
+            }
+            
+            selectedBudgetStudentIndex = studentIndex;
+            const student = students[studentIndex];
+            
+            // 填充表单值（如果已有实际支出）
+            elements.actualFixedInput.value = student.budget.actualSpending.fixed || '';
+            elements.actualVariableInput.value = student.budget.actualSpending.variable || '';
+            elements.actualDiscretionaryInput.value = student.budget.actualSpending.discretionary || '';
+            elements.actualIncomeInput.value = student.budget.actualSpending.income || '';
+            
+            // 显示表单
+            elements.transactionFormContainer.style.display = 'grid';
+            elements.budgetFormContainer.style.display = 'none';
+        }
+
+        // 隐藏交易表单
+        function hideTransactionForm() {
+            elements.transactionFormContainer.style.display = 'none';
+        }
+
+        // 保存实际支出记录
+        function saveTransaction() {
+            if (selectedBudgetStudentIndex < 0) return;
+            
+            const student = students[selectedBudgetStudentIndex];
+            const actualFixed = parseInt(elements.actualFixedInput.value) || 0;
+            const actualVariable = parseInt(elements.actualVariableInput.value) || 0;
+            const actualDiscretionary = parseInt(elements.actualDiscretionaryInput.value) || 0;
+            const actualIncome = parseInt(elements.actualIncomeInput.value) || 0;
+            
+            // 更新实际支出
+            student.budget.actualSpending = {
+                fixed: actualFixed,
+                variable: actualVariable,
+                discretionary: actualDiscretionary,
+                income: actualIncome
+            };
+            
+            saveData();
+            showNotification(`${student.name} 的实际支出已记录！`, 'success');
+            hideTransactionForm();
+            updateAllDisplays();
+        }
+
+        // 计算预算完成度
+        function calculateBudgetCompletion() {
+            if (students.length === 0) return showNotification('没有学生数据可计算！', 'error');
+            
+            let tableHTML = '';
+            let hasBudgetData = false;
+            
+            students.forEach(student => {
+                // 跳过未设置预算的学生
+                if (student.budget.income === 0) return;
+                
+                hasBudgetData = true;
+                
+                const categories = [
+                    { name: '收入', budget: student.budget.income, actual: student.budget.actualSpending.income },
+                    { name: '固定支出', budget: student.budget.fixedExpenses, actual: student.budget.actualSpending.fixed },
+                    { name: '浮动支出', budget: student.budget.variableExpenses, actual: student.budget.actualSpending.variable },
+                    { name: '自由支配', budget: student.budget.discretionary, actual: student.budget.actualSpending.discretionary },
+                    { name: '储蓄', budget: student.budget.savings, actual: student.budget.income - 
+                        (student.budget.actualSpending.fixed + student.budget.actualSpending.variable + 
+                        student.budget.actualSpending.discretionary) }
+                ];
+                
+                categories.forEach((category, index) => {
+                    // 计算完成度百分比
+                    const completionRate = category.budget > 0 ? (category.actual / category.budget) * 100 : 0;
+                    const roundedRate = Math.round(completionRate);
+                    
+                    // 确定状态颜色
+                    let statusClass = 'success';
+                    let statusText = '正常';
+                    
+                    if (category.name === '收入') {
+                        // 收入完成度低于90%为警告，低于70%为危险
+                        if (roundedRate < 70) { statusClass = 'danger'; statusText = '危险'; }
+                        else if (roundedRate < 90) { statusClass = 'warning'; statusText = '警告'; }
+                    } else {
+                        // 支出类：超过预算10%为警告，超过20%为危险
+                        if (roundedRate > 120) { statusClass = 'danger'; statusText = '严重超支'; }
+                        else if (roundedRate > 110) { statusClass = 'warning'; statusText = '轻微超支'; }
+                        else if (roundedRate < 80) { statusClass = 'warning'; statusText = '未达预算'; }
+                    }
+                    
+                    tableHTML += `
+                    <tr>
+                        <td>${index === 0 ? student.name : ''}</td>
+                        <td>${category.name}</td>
+                        <td>${category.budget}🪙</td>
+                        <td>${category.actual}🪙</td>
+                        <td>
+                            <div class="progress-bar">
+                                <div class="progress-fill ${statusClass}" style="width: ${Math.min(roundedRate, 150)}%"></div>
+                            </div>
+                            ${roundedRate}%
+                        </td>
+                        <td class="${statusClass}">${statusText}</td>
+                    </tr>
+                    `;
+                });
+            });
+            
+            if (!hasBudgetData) {
+                tableHTML = '<tr><td colspan="6">没有已设置预算的学生数据</td></tr>';
+            }
+            
+            elements.budgetCompletionBody.innerHTML = tableHTML;
+            elements.budgetCompletionTable.style.display = 'block';
+        }
+
+        // 投资系统
+        function makeInvestment() {
+            if (gameOver) return showNotification('游戏已结束，无法进行投资！', 'error');
+            
+            const studentName = elements.investStudentSelect.value;
+            const studentIndex = students.findIndex(s => s.name === studentName);
+            const amount = parseInt(elements.investAmountInput.value);
+            
+            if (studentIndex < 0) return showNotification('请先选择学生！', 'error');
+            if (!amount || amount <= 0) return showNotification('请输入有效金额！', 'error');
+            if (students[studentIndex].coins < amount) return showNotification('金币不足！', 'error');
+            
+            // 取出投资金额
+            takeCoins(studentIndex, amount, '投资');
+            
+            // 投资有概率成功或失败
+            const successRate = 0.5; // 50%成功率
+            const isSuccess = Math.random() < successRate;
+            
+            if (isSuccess) {
+                // 成功获得两倍回报（包含本金）
+                const returnAmount = amount * 2;
+                giveCoins(studentIndex, returnAmount, '投资成功');
+                logEvent(`${students[studentIndex].name} 投资成功，获得 ${returnAmount} 金币回报！`);
+            } else {
+                // 失败损失全部投资
+                logEvent(`${students[studentIndex].name} 投资失败，损失全部 ${amount} 金币！`);
+            }
+            
+            students[studentIndex].investments.push({
+                amount: amount,
+                date: new Date().toLocaleDateString(),
+                type: '股票',
+                success: isSuccess
+            });
+            
+            saveData();
+            updateAllDisplays();
+        }
+
+        // 贷款系统
+        function takeLoan() {
+            if (gameOver) return showNotification('游戏已结束，无法申请贷款！', 'error');
+            
+            const studentName = elements.investStudentSelect.value;
+            const studentIndex = students.findIndex(s => s.name === studentName);
+            const amount = parseInt(elements.investAmountInput.value);
+            
+            if (studentIndex < 0) return showNotification('请先选择学生！', 'error');
+            if (!amount || amount <= 0) return showNotification('请输入有效金额！', 'error');
+            
+            giveCoins(studentIndex, amount, '贷款');
+            
+            students[studentIndex].loans.push({
+                amount: amount,
+                interest: amount * 0.1, // 10%利息
+                dueDate: currentMonth + 1,
+                originalAmount: amount
+            });
+            
+            logEvent(`${students[studentIndex].name} 申请了 ${amount} 金币贷款，下个月需还款 ${amount + amount * 0.1} 金币！`);
+            saveData();
+            updateAllDisplays();
+        }
+
+        // 随机事件系统
+        function rollDiceForAll() {
+            if (gameOver) return showNotification('游戏已结束，无法掷骰子！', 'error');
+            
+            students.forEach((_, index) => rollDiceForStudent(index));
+        }
+
+        function rollDiceForSelected() {
+            if (gameOver) return showNotification('游戏已结束，无法掷骰子！', 'error');
+            
+            const studentName = elements.allStudentsSelect.value;
+            const studentIndex = students.findIndex(s => s.name === studentName);
+            
+            if (studentIndex < 0) return showNotification('请先选择学生！', 'error');
+            
+            rollDiceForStudent(studentIndex);
+        }
+
+        function rollDiceForStudent(studentIndex) {
+            if (gameOver) return;
+            
+            const diceRoll = Math.floor(Math.random() * 6) + 1;
+            elements.diceResultSpan.textContent = `骰子点数: ${diceRoll}`;
+            
+            const events = [
+                { type: 'challenge', message: '意外开销：学习用品损坏，需要维修', amount: -20 },
+                { type: 'luck', message: '好运降临：获得额外零花钱', amount: 15 },
+                { type: 'opportunity', message: '商场促销：心仪物品7折优惠', amount: -30 },
+                { type: 'learning', message: '理财知识：储蓄利率提升', effect: () => {
+                    giveCoins(studentIndex, 5, '知识奖励');
+                    updateStatus(studentIndex, 'mood', students[studentIndex].status.mood + 10);
+                }},
+                { type: 'social', message: '朋友生日：需要准备礼物', amount: -25 },
+                { type: 'windfall', message: '投资回报：获得收益', amount: 40 }
+            ];
+            
+            const event = events[diceRoll - 1];
+            let message = `${students[studentIndex].name} - 骰子点数${diceRoll}: ${event.message}`;
+            
+            if (event.amount) {
+                if (event.amount > 0) {
+                    giveCoins(studentIndex, event.amount, '随机事件');
+                } else if (event.amount < 0) {
+                    takeCoins(studentIndex, -event.amount, '随机事件');
+                }
+            } else if (event.effect) {
+                event.effect();
+            }
+            
+            logEvent(message);
+        }
+
+        // 记录事件日志
+        function logEvent(message) {
+            elements.eventLogDiv.innerHTML = `<div>${new Date().toLocaleTimeString()} - ${message}</div>` + elements.eventLogDiv.innerHTML;
+        }
+
+        // 月度结算
+        function nextMonth() {
+            if (gameOver) return showNotification('游戏已结束，无法进入下个月！', 'error');
+            
+            // 检查是否已到第12个月
+            if (currentMonth >= 12) {
+                showNotification('游戏已结束！已到第12个月。', 'error');
+                showFinalResults();
+                return;
+            }
+            
+            currentMonth++;
+            localStorage.setItem('currentMonth', currentMonth);
+            
+            students.forEach((student, index) => {
+                // 处理贷款
+                student.loans = student.loans.filter(loan => {
+                    if (loan.dueDate === currentMonth) {
+                        const totalAmount = loan.amount + loan.interest;
+                        takeCoins(index, totalAmount, '贷款还款');
+                        logEvent(`${student.name} 偿还了 ${totalAmount} 金币贷款（含利息）`);
+                        return false;
+                    }
+                    return true;
+                });
+                
+                // 每月生活消耗100金币
+                takeCoins(index, MONTHLY_LIVING_COST, '生活消耗');
+                logEvent(`${student.name} 支付了 ${MONTHLY_LIVING_COST} 金币生活费用`);
+                
+                // 检查是否金币不足
+                if (student.coins < 0) {
+                    gameOver = true;
+                    showNotification(`游戏结束！${student.name} 金币不足，无法支付生活费用！`, 'error');
+                }
+                
+                // 状态自然变化
+                updateStatus(index, 'mood', student.status.mood - 5);
+                updateStatus(index, 'hunger', student.status.hunger - 15);
+                updateStatus(index, 'energy', student.status.energy - 10);
+                
+                // 重置决策点
+                student.decisionPoints = 10;
+                
+                // 记录月度数据
+                student.monthlyData.push({
+                    month: currentMonth,
+                    finalBalance: student.coins,
+                    savingsRate: student.budget.savings / student.budget.income * 100,
+                    status: { ...student.status }
+                });
+                
+                // 重置下月预算实际支出
+                student.budget.actualSpending = { fixed: 0, variable: 0, discretionary: 0, income: 0 };
+            });
+            
+            saveData();
+            
+            // 如果游戏结束，显示最终结果
+            if (gameOver) {
+                showFinalResults();
+                return;
+            }
+            
+            updateAllDisplays();
+            
+            // 检查是否达到游戏结束条件
+            if (currentMonth >= 12) {
+                showNotification(`游戏结束！已到第${currentMonth}个月。`, 'error');
+                showFinalResults();
+            } else {
+                showNotification(`进入第${currentMonth}个月！已处理贷款结算和生活消耗。`, 'success');
+            }
+        }
+
+        // 显示最终结果
+        function showFinalResults() {
+            gameOver = true;
+            
+            // 按金币数量排序
+            const sortedStudents = [...students].sort((a, b) => b.coins - a.coins);
+            
+            let resultHTML = '<div class="summary-card"><h3>🏆 最终排名 🏆</h3>';
+            sortedStudents.forEach((student, index) => {
+                resultHTML += `<p>${index + 1}. ${student.name} - ${student.coins}🪙</p>`;
+            });
+            resultHTML += '</div>';
+            
+            elements.summaryCardsDiv.innerHTML = resultHTML;
+            elements.detailedReportsDiv.innerHTML = '<p>游戏已结束，感谢游玩！</p>';
+            
+            // 切换到报告标签页
+            switchTab('reports');
+        }
+
+        // 显示更新函数
+        function updateAllDisplays() {
+            updateBasicDisplay();
+            updateBudgetDisplay();
+            updateInvestmentDisplay();
+            updateEventDisplay();
+            updateReportDisplay();
+        }
+
+        function updateBasicDisplay() {
+            elements.basicStudentsContainer.innerHTML = students.map((student, index) => {
+                // 根据状态确定可用的决策
+                const disableAllButRest = student.status.energy <= 0;
+                const disableAllButEat = student.status.hunger <= 0;
+                const isInDanger = (disableAllButRest || disableAllButEat) && student.decisionPoints <= 0;
+                
+                return `
+                <div class="student-card ${isInDanger ? 'danger' : ''}">
+                    ${isInDanger ? '<div class="danger-alert">⚠️ 状态危急！没有决策点了！</div>' : ''}
+                    ${student.coins < MONTHLY_LIVING_COST ? `<div class="danger-alert">⚠️ 金币不足！下个月将无法支付生活费用(${MONTHLY_LIVING_COST}🪙)！</div>` : ''}
+                    <div class="student-header">
+                        <div class="student-name">${student.name}</div>
+                        <div>第${currentMonth}个月</div>
+                    </div>
+                    <div class="coin-display">${student.coins} 🪙</div>
+                    <div>下月生活费用: ${MONTHLY_LIVING_COST}🪙</div>
+                    
+                    <div class="status-section">
+                        <div>状态</div>
+                        <div>本月决策点: ${student.decisionPoints}/10</div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: ${student.decisionPoints * 10}%"></div>
+                        </div>
+                        <div>心情: ${student.status.mood}%</div>
+                        <div class="progress-bar"><div class="progress-fill mood" style="width: ${student.status.mood}%"></div></div>
+                        <div>饱腹: ${student.status.hunger}%</div>
+                        <div class="progress-bar"><div class="progress-fill hunger" style="width: ${student.status.hunger}%"></div></div>
+                        <div>健康: ${student.status.health}%</div>
+                        <div class="progress-bar"><div class="progress-fill health" style="width: ${student.status.health}%"></div></div>
+                        <div>精力: ${student.status.energy}%</div>
+                        <div class="progress-bar"><div class="progress-fill energy" style="width: ${student.status.energy}%"></div></div>
+                    </div>
+                    
+                    <div class="control-panel">
+                        <div>日常决策</div>
+                        <div class="decision-buttons">
+                            <button class="btn-info decision-btn" onclick="makeDecision(${index}, 'eatGood')" 
+                                ${disableAllButRest ? 'disabled' : ''}>
+                                吃一顿好的
+                            </button>
+                            <button class="btn-info decision-btn" onclick="makeDecision(${index}, 'studyHard')" 
+                                ${disableAllButRest || disableAllButEat ? 'disabled' : ''}>
+                                努力学习
+                            </button>
+                            <button class="btn-info decision-btn" onclick="makeDecision(${index}, 'exercise')" 
+                                ${disableAllButRest || disableAllButEat ? 'disabled' : ''}>
+                                锻炼身体
+                            </button>
+                            <button class="btn-info decision-btn" onclick="makeDecision(${index}, 'socialize')" 
+                                ${disableAllButRest || disableAllButEat ? 'disabled' : ''}>
+                                参加社交
+                            </button>
+                            <button class="btn-info decision-btn" onclick="makeDecision(${index}, 'rest')" 
+                                ${disableAllButEat ? 'disabled' : ''}>
+                                好好休息
+                            </button>
+                            <button class="btn-info decision-btn" onclick="makeDecision(${index}, 'partTime')" 
+                                ${disableAllButRest || disableAllButEat ? 'disabled' : ''}>
+                                做兼职
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="student-controls">
+                        <button class="btn-success" onclick="giveCoins(${index}, 1)">+1</button>
+                        <button class="btn-success" onclick="giveCoins(${index}, 5)">+5</button>
+                        <button class="btn-success" onclick="giveCoins(${index}, 10)">+10</button>
+                        <button class="btn-danger" onclick="takeCoins(${index}, 1)">-1</button>
+                        <button class="btn-danger" onclick="takeCoins(${index}, 5)">-5</button>
+                        <button class="btn-danger" onclick="takeCoins(${index}, 10)">-10</button>
+                    </div>
+                </div>
+                `;
+            }).join('');
+        }
+
+        function updateBudgetDisplay() {
+            elements.budgetStudentsContainer.innerHTML = students.map(student => `
+                <div class="student-card">
+                    <div class="student-header">
+                        <div class="student-name">${student.name}</div>
+                        <div>预算完成度</div>
+                    </div>
+                    <div class="budget-section">
+                        <div>收入: ${student.budget.income || 0}🪙 (实际: ${student.budget.actualSpending.income || 0}🪙)</div>
+                        <div>固定支出: ${student.budget.fixedExpenses || 0}🪙 (实际: ${student.budget.actualSpending.fixed || 0}🪙)</div>
+                        <div>浮动支出: ${student.budget.variableExpenses || 0}🪙 (实际: ${student.budget.actualSpending.variable || 0}🪙)</div>
+                        <div>自由支配: ${student.budget.discretionary || 0}🪙 (实际: ${student.budget.actualSpending.discretionary || 0}🪙)</div>
+                        <div>储蓄: ${student.budget.savings || 0}🪙</div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function updateInvestmentDisplay() {
+            elements.investmentStudentsContainer.innerHTML = students.map(student => `
+                <div class="student-card">
+                    <div class="student-header">
+                        <div class="student-name">${student.name}</div>
+                        <div>资产: ${student.coins}🪙</div>
+                    </div>
+                    
+                    <div class="investment-section">
+                        <div>投资记录</div>
+                        ${student.investments.length > 0 ? student.investments.map(inv => `
+                            <div>
+                                ${inv.date}: ${inv.type} - ${inv.success ? '成功' : '失败'} - ${inv.amount}🪙
+                            </div>
+                        `).join('') : '<div>暂无投资记录</div>'}
+                    </div>
+                    
+                    <div class="loan-section">
+                        <div>贷款记录</div>
+                        ${student.loans.length > 0 ? student.loans.map(loan => `
+                            <div>
+                                金额: ${loan.originalAmount}🪙 - 利息: ${loan.interest}🪙 - 到期: 第${loan.dueDate}个月
+                            </div>
+                        `).join('') : '<div>暂无贷款记录</div>'}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function updateEventDisplay() {
+            elements.eventStudentsContainer.innerHTML = students.map((student, index) => `
+                <div class="student-card">
+                    <div class="student-header">
+                        <div class="student-name">${student.name}</div>
+                        <div>当前金币: ${student.coins}🪙</div>
+                    </div>
+                    <div class="status-section">
+                        <div>状态</div>
+                        <div>心情: ${student.status.mood}%</div>
+                        <div class="progress-bar"><div class="progress-fill mood" style="width: ${student.status.mood}%"></div></div>
+                        <div>饱腹: ${student.status.hunger}%</div>
+                        <div class="progress-bar"><div class="progress-fill hunger" style="width: ${student.status.hunger}%"></div></div>
+                    </div>
+                    <button class="btn-warning" onclick="rollDiceForStudent(${index})">为该学生掷骰子</button>
+                </div>
+            `).join('');
+        }
+
+        function updateReportDisplay() {
+            // 财务报告将在生成时更新
+        }
+
+        // 生成财务报告
+        function generateReports() {
+            if (gameOver) return showNotification('游戏已结束，无法生成报告！', 'error');
+            
+            // 计算班级总体财务状况
+            const totalStudents = students.length;
+            const totalCoins = students.reduce((sum, student) => sum + student.coins, 0);
+            const avgCoins = totalStudents > 0 ? Math.round(totalCoins / totalStudents) : 0;
+            const totalLoans = students.reduce((sum, student) => 
+                sum + student.loans.reduce((loanSum, loan) => loanSum + loan.amount, 0), 0);
+            
+            // 生成摘要卡片
+            elements.summaryCardsDiv.innerHTML = `
+                <div class="summary-card">
+                    <h3>班级总览</h3>
+                    <p>学生总数: ${totalStudents}</p>
+                    <p>总金币: ${totalCoins}🪙</p>
+                    <p>平均金币: ${avgCoins}🪙</p>
+                    <p>总贷款: ${totalLoans}🪙</p>
+                </div>
+                <div class="summary-card">
+                    <h3>本月情况</h3>
+                    <p>当前月份: ${currentMonth}</p>
+                    <p>市场趋势: ${marketTrend === -1 ? '下跌' : marketTrend === 0 ? '平稳' : '上涨'}</p>
+                    <p>每月生活消耗: ${MONTHLY_LIVING_COST}🪙</p>
+                </div>
+            `;
+            
+            // 生成详细报告
+            elements.detailedReportsDiv.innerHTML = students.map(student => `
+                <div class="student-card">
+                    <div class="student-header">
+                        <div class="student-name">${student.name}</div>
+                        <div>资产: ${student.coins}🪙</div>
+                    </div>
+                    
+                    <div class="status-section">
+                        <div>当前状态</div>
+                        <div>本月决策点: ${student.decisionPoints}/10</div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: ${student.decisionPoints * 10}%"></div>
+                        </div>
+                        <div>心情: ${student.status.mood}%</div>
+                        <div class="progress-bar"><div class="progress-fill mood" style="width: ${student.status.mood}%"></div></div>
+                        <div>饱腹: ${student.status.hunger}%</div>
+                        <div class="progress-bar"><div class="progress-fill hunger" style="width: ${student.status.hunger}%"></div></div>
+                        <div>健康: ${student.status.health}%</div>
+                        <div class="progress-bar"><div class="progress-fill health" style="width: ${student.status.health}%"></div></div>
+                        <div>精力: ${student.status.energy}%</div>
+                        <div class="progress-bar"><div class="progress-fill energy" style="width: ${student.status.energy}%"></div></div>
+                    </div>
+                    
+                    <div class="investment-section">
+                        <div>投资记录</div>
+                        ${student.investments.length > 0 ? student.investments.map(inv => `
+                            <div>
+                                ${inv.date}: ${inv.type} - ${inv.success ? '成功' : '失败'} - ${inv.amount}🪙
+                            </div>
+                        `).join('') : '<div>暂无投资记录</div>'}
+                    </div>
+                    
+                    <div class="loan-section">
+                        <div>贷款记录</div>
+                        ${student.loans.length > 0 ? student.loans.map(loan => `
+                            <div>
+                                金额: ${loan.originalAmount}🪙 - 利息: ${loan.interest}🪙 - 到期: 第${loan.dueDate}个月
+                            </div>
+                        `).join('') : '<div>暂无贷款记录</div>'}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // 工具函数
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            document.querySelector(`.tab[onclick="switchTab('${tabName}')"]`).classList.add('active');
+            document.getElementById(tabName).classList.add('active');
+        }
+
+        function updateStudentSelects() {
+            const selects = [
+                { element: elements.allStudentsSelect, id: 'allStudents' },
+                { element: elements.investStudentSelect, id: 'investStudent' },
+                { element: elements.budgetStudentSelect, id: 'budgetStudentSelect' }
+            ];
+            
+            selects.forEach(selectInfo => {
+                const select = selectInfo.element;
+                select.innerHTML = '<option value="">选择学生</option>';
+                students.forEach(student => {
+                    select.innerHTML += `<option value="${student.name}">${student.name}</option>`;
+                });
+            });
+        }
+
+        function saveData() {
+            localStorage.setItem('classroomWealth', JSON.stringify(students));
+            localStorage.setItem('currentMonth', currentMonth.toString());
+        }
+
+        function updateMarketStatus() {
+            const trends = ['下跌 📉', '平稳 📊', '上涨 📈'];
+            marketTrend = Math.floor(Math.random() * 3) - 1;
+            elements.marketStatusDiv.textContent = `市场状态: ${trends[marketTrend + 1]}`;
+        }
+
+        // 给予金币
+        function giveCoinsToSelected() {
+            if (gameOver) return showNotification('游戏已结束，无法给予金币！', 'error');
+            
+            const studentName = elements.allStudentsSelect.value;
+            const studentIndex = students.findIndex(s => s.name === studentName);
+            const amount = parseInt(elements.amountInput.value);
+            
+            if (studentIndex < 0) return showNotification('请先选择学生！', 'error');
+            if (!amount || amount <= 0) return showNotification('请输入有效金额！', 'error');
+            
+            giveCoins(studentIndex, amount);
+        }
+
+        // 扣除金币
+        function takeCoinsFromSelected() {
+            if (gameOver) return showNotification('游戏已结束，无法扣除金币！', 'error');
+            
+            const studentName = elements.allStudentsSelect.value;
+            const studentIndex = students.findIndex(s => s.name === studentName);
+            const amount = parseInt(elements.amountInput.value);
+            
+            if (studentIndex < 0) return showNotification('请先选择学生！', 'error');
+            if (!amount || amount <= 0) return showNotification('请输入有效金额！', 'error');
+            
+            takeCoins(studentIndex, amount);
+        }
+
+        function calculateInterest() {
+            showNotification('利息计算功能已规划，将在下一版本实现！', 'info');
+        }
+
+        function resetMonth() {
+            if (gameOver) return showNotification('游戏已结束，无法重置本月数据！', 'error');
+            
+            if (confirm('确定要重置本月数据吗？这将清除所有学生的本月财务活动记录！')) {
+                students.forEach(student => {
+                    student.investments = [];
+                    student.loans = [];
+                    student.monthlyData = student.monthlyData.slice(0, -1);
+                    student.decisionPoints = 10; // 重置决策点
+                    student.budget.actualSpending = { fixed: 0, variable: 0, discretionary: 0, income: 0 };
+                });
+                saveData();
+                updateAllDisplays();
+                showNotification('本月数据已重置！', 'success');
+            }
+        }
+
+        // 初始化页面
+        document.addEventListener('DOMContentLoaded', initPage);
+    </script>
+</body>
+</html>

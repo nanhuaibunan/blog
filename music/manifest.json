@@ -1,0 +1,90 @@
+[
+  {
+    "id": 1,
+    "title": "生きる (活着)",
+    "artist": "v flower、吐息、Arh",
+    "src": "/blog/music/1.mp3",
+    "playable": true,
+    "cover": "/blog/music/covers/cover1.png"
+  },
+  {
+    "id": 2,
+    "title": "カトラリー (餐具)",
+    "artist": "初音ミク、神山羊",
+    "src": "/blog/music/2.mp3",
+    "playable": true,
+    "cover": "/blog/music/covers/cover2.png"
+  },
+  {
+    "id": 3,
+    "title": "ここでおあずけ (就保管在这里吧)",
+    "artist": "才歌",
+    "src": "/blog/music/3.mp3",
+    "playable": true,
+    "cover": "/blog/music/covers/cover3.png"
+  },
+  {
+    "id": 4,
+    "title": "扬旗鸣鼓",
+    "artist": "洛天依、乐正绫",
+    "src": "/blog/music/4.mp3",
+    "playable": true,
+    "cover": "/blog/music/covers/cover4.png"
+  },
+  {
+    "id": 5,
+    "title": "彼女は旅に出る (她踏上了旅程)",
+    "artist": "鎖那",
+    "src": "/blog/music/5.mp3",
+    "playable": true,
+    "cover": "/blog/music/covers/cover5.png"
+  },
+  {
+    "id": 6,
+    "title": "Midnight Call",
+    "artist": "ぜったくん、kojikoji",
+    "src": "/blog/music/6.mp3",
+    "playable": true,
+    "cover": "/blog/music/covers/cover6.png"
+  },
+  {
+    "id": 7,
+    "title": "世末歌者",
+    "artist": "乐正绫、洛天依",
+    "src": "/blog/music/7.mp3",
+    "playable": true,
+    "cover": "/blog/music/covers/cover7.png"
+  },
+  {
+    "id": 8,
+    "title": "千本桜",
+    "artist": "初音ミク",
+    "src": "/blog/music/8.mp3",
+    "playable": true,
+    "cover": "/blog/music/covers/cover8.png"
+  },
+  {
+    "id": 9,
+    "title": "悲しみは水のよう (我的悲伤是水做的)",
+    "artist": "夏野Natsuno",
+    "src": "/blog/music/9.mp3",
+    "playable": true,
+    "cover": "/blog/music/covers/cover9.png"
+  },
+  {
+    "id": 10,
+    "title": "东京不太热",
+    "artist": "封茗囧菌",
+    "src": "/blog/music/10.mp3",
+    "playable": true,
+    "cover": "/blog/music/covers/cover10.png"
+  },
+  {
+    "id": 11,
+    "title": "权御天下",
+    "artist": "洛天依",
+    "src": "/blog/music/11.mp3",
+    "playable": true,
+    "cover": "/blog/music/covers/cover11.png"
+  }
+]

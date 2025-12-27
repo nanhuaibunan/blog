@@ -1,0 +1,1733 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>价格预测与风险管理游戏</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Microsoft YaHei', sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background-color: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        header {
+            background: linear-gradient(90deg, #4b6cb7 0%, #182848 100%);
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+
+        header h1 {
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+
+        .game-area {
+            display: flex;
+            flex-wrap: wrap;
+            padding: 20px;
+        }
+
+        .player-panel {
+            flex: 1;
+            min-width: 300px;
+            padding: 20px;
+            border-right: 1px solid #eee;
+        }
+
+        .market-panel {
+            flex: 2;
+            min-width: 400px;
+            padding: 20px;
+        }
+
+        .panel {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+        }
+
+        h2 {
+            color: #4b6cb7;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .stats {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 15px;
+        }
+
+        .stat {
+            text-align: center;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            flex: 1;
+            margin: 0 5px;
+        }
+
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #4b6cb7;
+        }
+
+        .trade-form {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .trade-input {
+            display: flex;
+            margin-bottom: 15px;
+        }
+
+        input,
+        select,
+        button {
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+
+        input {
+            flex: 2;
+            margin-right: 10px;
+        }
+
+        select {
+            flex: 1;
+            margin-right: 10px;
+        }
+
+        button {
+            background: #4b6cb7;
+            color: white;
+            border: none;
+            cursor: pointer;
+            transition: background 0.3s;
+            font-weight: bold;
+        }
+
+        button:hover {
+            background: #3a5a9c;
+        }
+
+        button:disabled {
+            background: #cccccc;
+            cursor: not-allowed;
+        }
+
+        .history {
+            max-height: 200px;
+            overflow-y: auto;
+            margin-top: 15px;
+        }
+
+        .history-item {
+            padding: 8px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 5px;
+        }
+
+        .history-time {
+            font-size: 12px;
+            color: #666;
+            flex-basis: 100%;
+        }
+
+        .history-participants {
+            flex: 2;
+        }
+
+        .history-goods {
+            flex: 1;
+        }
+
+        .history-price,
+        .history-total {
+            flex: 1;
+            text-align: right;
+        }
+
+        .seller {
+            color: #dc3545;
+        }
+
+        .buyer {
+            color: #28a745;
+        }
+
+        .trade-arrow {
+            margin: 0 5px;
+            color: #4b6cb7;
+        }
+
+        .price-chart {
+            height: 200px;
+            margin-top: 20px;
+            position: relative;
+        }
+
+        .chart-container {
+            height: 100%;
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-around;
+            padding: 10px;
+            border: 1px solid #eee;
+            border-radius: 5px;
+        }
+
+        .chart-bar {
+            width: 40px;
+            background: #4b6cb7;
+            border-radius: 3px 3px 0 0;
+            position: relative;
+            transition: height 0.5s;
+        }
+
+        .chart-label {
+            position: absolute;
+            bottom: -25px;
+            left: 0;
+            right: 0;
+            text-align: center;
+            font-size: 12px;
+        }
+
+        .chart-value {
+            position: absolute;
+            top: -25px;
+            left: 0;
+            right: 0;
+            text-align: center;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .controls {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+        }
+
+        .rules-btn {
+            background: #6c757d;
+        }
+
+        .next-round {
+            background: #28a745;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 100;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .close-btn {
+            float: right;
+            font-size: 24px;
+            cursor: pointer;
+        }
+
+        .result-modal {
+            text-align: center;
+        }
+
+        .result-stats {
+            display: flex;
+            justify-content: space-around;
+            margin: 20px 0;
+        }
+
+        .result-stat {
+            text-align: center;
+        }
+
+        .winner {
+            color: #28a745;
+            font-weight: bold;
+            font-size: 24px;
+            margin: 20px 0;
+        }
+
+        .news-feed {
+            margin-top: 20px;
+            max-height: 150px;
+            overflow-y: auto;
+            border: 1px solid #eee;
+            border-radius: 5px;
+            padding: 10px;
+        }
+
+        .news-item {
+            padding: 5px 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .player-list {
+            margin-top: 20px;
+        }
+
+        .player-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px;
+            border-bottom: 1px solid #eee;
+            transition: background 0.3s;
+            cursor: pointer;
+        }
+
+        .player-item:hover {
+            background: #f8f9fa;
+        }
+
+        .player-name {
+            font-weight: bold;
+        }
+
+        .player-assets {
+            color: #4b6cb7;
+        }
+
+        .player-management {
+            margin-top: 20px;
+        }
+
+        .player-input {
+            display: flex;
+            margin-bottom: 15px;
+        }
+
+        .player-input input {
+            flex: 1;
+            margin-right: 10px;
+        }
+
+        .player-list-container {
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .active-player {
+            background-color: #e7f3ff;
+            border-left: 4px solid #4b6cb7;
+        }
+
+        .player-rank {
+            width: 25px;
+            height: 25px;
+            border-radius: 50%;
+            background: #4b6cb7;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            margin-right: 10px;
+        }
+
+        .rank-1 {
+            background: #ffd700;
+        }
+
+        .rank-2 {
+            background: #c0c0c0;
+        }
+
+        .rank-3 {
+            background: #cd7f32;
+        }
+
+        .trade-goods-select {
+            margin-bottom: 15px;
+        }
+
+        .trade-goods-select select {
+            width: 100%;
+        }
+
+        .trade-parties {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 15px;
+        }
+
+        .trade-party {
+            flex: 1;
+            margin: 0 10px;
+        }
+
+        .trade-direction {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            color: #4b6cb7;
+        }
+
+        .goods-prices {
+            margin-top: 15px;
+        }
+
+        .price-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .price-change {
+            font-size: 12px;
+        }
+
+        .price-up {
+            color: #28a745;
+        }
+
+        .price-down {
+            color: #dc3545;
+        }
+
+        .goods-list {
+            margin-top: 15px;
+        }
+
+        .goods-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .goods-name {
+            font-weight: bold;
+        }
+
+        .goods-quantity {
+            color: #4b6cb7;
+        }
+
+        .official-trade {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+        }
+
+        .official-trade h3 {
+            color: #4b6cb7;
+            margin-bottom: 10px;
+        }
+
+        @media (max-width: 768px) {
+            .game-area {
+                flex-direction: column;
+            }
+
+            .player-panel {
+                border-right: none;
+                border-bottom: 1px solid #eee;
+            }
+
+            .trade-parties {
+                flex-direction: column;
+            }
+
+            .trade-party {
+                margin: 5px 0;
+            }
+
+            .trade-direction {
+                margin: 10px 0;
+            }
+
+            .history-item {
+                flex-direction: column;
+            }
+
+            .history-price,
+            .history-total {
+                text-align: left;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <header>
+            <h1>价格预测与风险管理游戏</h1>
+            <p>通过买卖商品，在五轮游戏后成为资产最高的人</p>
+        </header>
+
+        <div class="game-area">
+            <div class="player-panel">
+                <div class="panel">
+                    <h2>玩家管理</h2>
+                    <div class="player-management">
+                        <div class="player-input">
+                            <input type="text" id="player-name" placeholder="输入玩家姓名">
+                            <button id="add-player">添加玩家</button>
+                        </div>
+                        <div class="player-list-container" id="player-list">
+                            <!-- 玩家列表将在这里显示 -->
+                        </div>
+                    </div>
+                </div>
+
+                <div class="panel">
+                    <h2>当前玩家: <span id="current-player-name">未选择</span></h2>
+                    <div class="stats">
+                        <div class="stat">
+                            <div class="stat-label">现金</div>
+                            <div class="stat-value" id="cash">1000</div>
+                        </div>
+                        <div class="stat">
+                            <div class="stat-label">商品数量</div>
+                            <div class="stat-value" id="goods">0</div>
+                        </div>
+                        <div class="stat">
+                            <div class="stat-label">总资产</div>
+                            <div class="stat-value" id="total-assets">1000</div>
+                        </div>
+                    </div>
+
+                    <div class="goods-list" id="player-goods">
+                        <!-- 玩家商品列表将在这里显示 -->
+                    </div>
+                </div>
+
+                <div class="panel">
+                    <h2>玩家间交易</h2>
+                    <div class="trade-form">
+                        <div class="trade-parties">
+                            <div class="trade-party">
+                                <label>出售方</label>
+                                <select id="seller-player">
+                                    <option value="">选择出售玩家</option>
+                                </select>
+                            </div>
+                            <div class="trade-direction">→</div>
+                            <div class="trade-party">
+                                <label>购买方</label>
+                                <select id="buyer-player">
+                                    <option value="">选择购买玩家</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="trade-goods-select">
+                            <select id="trade-goods">
+                                <option value="">选择交易商品</option>
+                            </select>
+                        </div>
+                        <div class="trade-input">
+                            <input type="number" id="trade-amount" placeholder="交易数量" min="1">
+                        </div>
+                        <div class="trade-input">
+                            <input type="number" id="trade-price" placeholder="交易价格" min="1">
+                            <span>元</span>
+                        </div>
+                        <button id="trade-btn">执行交易</button>
+                    </div>
+                </div>
+
+                <div class="panel">
+                    <h2>向官方出售</h2>
+                    <div class="official-trade">
+                        <h3>按市场价向官方出售商品</h3>
+                        <div class="trade-form">
+                            <div class="trade-party">
+                                <label>出售玩家</label>
+                                <select id="official-seller-player">
+                                    <option value="">选择出售玩家</option>
+                                </select>
+                            </div>
+                            <div class="trade-goods-select">
+                                <select id="official-sell-goods">
+                                    <option value="">选择要出售的商品</option>
+                                </select>
+                            </div>
+                            <div class="trade-input">
+                                <input type="number" id="official-sell-amount" placeholder="出售数量" min="1">
+                            </div>
+                            <div class="trade-input">
+                                <span>出售价格: </span>
+                                <span id="official-sell-price">0</span>
+                                <span>元/件</span>
+                            </div>
+                            <div class="trade-input">
+                                <span>总金额: </span>
+                                <span id="official-sell-total">0</span>
+                                <span>元</span>
+                            </div>
+                            <button id="official-sell-btn">向官方出售</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="panel">
+                    <h2>交易历史</h2>
+                    <div class="history" id="trade-history">
+                        <!-- 交易历史将在这里显示 -->
+                    </div>
+                </div>
+            </div>
+
+            <div class="market-panel">
+                <div class="panel">
+                    <h2>市场信息</h2>
+                    <div class="stats">
+                        <div class="stat">
+                            <div class="stat-label">当前轮次</div>
+                            <div class="stat-value" id="current-round">1/5</div>
+                        </div>
+                        <div class="stat">
+                            <div class="stat-label">市场热度</div>
+                            <div class="stat-value" id="market-heat">中等</div>
+                        </div>
+                        <div class="stat">
+                            <div class="stat-label">市场趋势</div>
+                            <div class="stat-value" id="market-trend">未知</div>
+                        </div>
+                    </div>
+
+                    <div class="price-chart">
+                        <div class="chart-container" id="price-chart">
+                            <!-- 价格图表将在这里显示 -->
+                        </div>
+                    </div>
+                </div>
+
+                <div class="panel">
+                    <h2>商品价格</h2>
+                    <div class="goods-prices" id="goods-prices">
+                        <!-- 商品价格将在这里显示 -->
+                    </div>
+                </div>
+
+                <div class="panel">
+                    <h2>玩家排行榜</h2>
+                    <div class="player-list" id="player-rankings">
+                        <!-- 玩家排行榜将在这里显示 -->
+                    </div>
+                </div>
+
+                <div class="panel">
+                    <h2>市场新闻</h2>
+                    <div class="news-feed" id="news-feed">
+                        <!-- 新闻将在这里显示 -->
+                    </div>
+                </div>
+
+                <div class="panel">
+                    <h2>游戏控制</h2>
+                    <div class="controls">
+                        <button class="rules-btn" id="rules-btn">游戏规则</button>
+                        <button class="next-round" id="next-round-btn" disabled>下一轮</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 规则模态框 -->
+    <div class="modal" id="rules-modal">
+        <div class="modal-content">
+            <span class="close-btn" id="close-rules">&times;</span>
+            <h2>游戏规则</h2>
+            <p>这是一个关于价格预测、风险承担和信息博弈的游戏。</p>
+
+            <h3>游戏目标</h3>
+            <p>玩家通过买卖"商品"，在五轮游戏后，成为资产（现金+商品总价值）最高的人。</p>
+
+            <h3>游戏流程</h3>
+            <p>游戏共进行5轮，每轮分为三个环节：</p>
+            <ol>
+                <li><strong>自由交易环节</strong>：玩家可以自由买卖商品，交易价格由双方协商决定。</li>
+                <li><strong>官方结算环节</strong>：系统根据市场供需动态调整商品价格，所有学生持有的商品均按此价格计算其总资产。</li>
+                <li><strong>策略思考环节</strong>：根据最新的价格走势，思考、推测下一轮的价格可能会是多少，并计划下一轮的交易策略。</li>
+            </ol>
+
+            <h3>价格规律</h3>
+            <p>商品的价格会根据市场供需关系动态调整：</p>
+            <ul>
+                <li>出售多的商品价格会下降</li>
+                <li>出售少的商品价格会上升</li>
+                <li>市场还会受到随机事件影响</li>
+            </ul>
+
+            <h3>向官方出售</h3>
+            <p>玩家可以随时按当前市场价格向官方出售商品，无需寻找买家。可以选择任意玩家进行出售操作。</p>
+
+            <button id="close-rules-btn" style="margin-top: 20px;">关闭</button>
+        </div>
+    </div>
+
+    <!-- 结果模态框 -->
+    <div class="modal" id="result-modal">
+        <div class="modal-content result-modal">
+            <h2>游戏结束</h2>
+            <div class="winner" id="winner-message"></div>
+            <div class="result-stats">
+                <div class="result-stat">
+                    <div>最终现金</div>
+                    <div class="stat-value" id="final-cash"></div>
+                </div>
+                <div class="result-stat">
+                    <div>最终商品</div>
+                    <div class="stat-value" id="final-goods"></div>
+                </div>
+                <div class="result-stat">
+                    <div>最终资产</div>
+                    <div class="stat-value" id="final-assets"></div>
+                </div>
+            </div>
+            <button id="restart-btn" style="margin-top: 20px;">重新开始</button>
+        </div>
+    </div>
+
+    <script>
+        // 1. 游戏状态管理模块：统一管理游戏数据
+        const GameState = {
+            state: {
+                currentPlayerId: null,
+                players: [],
+                currentRound: 1,
+                totalRounds: 5,
+                goods: [
+                    { id: "crystal", name: "魔法水晶", basePrice: 100, currentPrice: 100, priceHistory: [100] },
+                    { id: "gem", name: "火焰宝石", basePrice: 150, currentPrice: 150, priceHistory: [150] },
+                    { id: "stone", name: "智慧之石", basePrice: 80, currentPrice: 80, priceHistory: [80] },
+                    { id: "orb", name: "神秘宝珠", basePrice: 200, currentPrice: 200, priceHistory: [200] }
+                ],
+                news: [
+                    `[${new Date().toLocaleTimeString()}] 市场开盘，交易开始！`,
+                    `[${new Date().toLocaleTimeString()}] 投资者对商品前景持乐观态度`
+                ],
+                globalTradeHistory: [],
+                roundSales: {}
+            },
+
+            // 初始化轮次销售记录
+            initRoundSales() {
+                this.state.goods.forEach(good => {
+                    this.state.roundSales[good.id] = 0;
+                });
+            },
+
+            // 添加玩家
+            addPlayer(player) {
+                this.state.players.push(player);
+                if (this.state.players.length === 1) {
+                    this.state.currentPlayerId = player.id;
+                }
+            },
+
+            // 获取当前玩家
+            getCurrentPlayer() {
+                return this.state.players.find(p => p.id === this.state.currentPlayerId) || null;
+            },
+
+            // 更新商品价格
+            updateGoodsPrice(goodId, newPrice) {
+                const good = this.state.goods.find(g => g.id === goodId);
+                if (good) {
+                    good.currentPrice = Math.round(newPrice);
+                    good.priceHistory.push(good.currentPrice);
+                }
+            },
+
+            // 添加新闻
+            addNews(content) {
+                this.state.news.unshift(`[${new Date().toLocaleTimeString()}] ${content}`);
+            },
+
+            // 重置游戏状态
+            reset() {
+                this.state.players = [];
+                this.state.currentPlayerId = null;
+                this.state.currentRound = 1;
+                this.state.globalTradeHistory = [];
+                this.state.news = [
+                    `[${new Date().toLocaleTimeString()}] 市场开盘，交易开始！`,
+                    `[${new Date().toLocaleTimeString()}] 投资者对商品前景持乐观态度`
+                ];
+
+                // 重置商品价格
+                this.state.goods.forEach(good => {
+                    good.currentPrice = good.basePrice;
+                    good.priceHistory = [good.basePrice];
+                    this.state.roundSales[good.id] = 0;
+                });
+            }
+        };
+
+        // 2. DOM管理模块：统一获取和操作DOM
+        const DOMManager = {
+            elements: {},
+
+            // 初始化DOM元素缓存
+            initElements() {
+                this.elements = {
+                    playerName: document.getElementById('player-name'),
+                    addPlayerBtn: document.getElementById('add-player'),
+                    playerList: document.getElementById('player-list'),
+                    currentPlayerName: document.getElementById('current-player-name'),
+                    cash: document.getElementById('cash'),
+                    goods: document.getElementById('goods'),
+                    totalAssets: document.getElementById('total-assets'),
+                    currentRound: document.getElementById('current-round'),
+                    marketHeat: document.getElementById('market-heat'),
+                    marketTrend: document.getElementById('market-trend'),
+                    sellerPlayer: document.getElementById('seller-player'),
+                    buyerPlayer: document.getElementById('buyer-player'),
+                    tradeGoods: document.getElementById('trade-goods'),
+                    tradeAmount: document.getElementById('trade-amount'),
+                    tradePrice: document.getElementById('trade-price'),
+                    tradeBtn: document.getElementById('trade-btn'),
+                    tradeHistory: document.getElementById('trade-history'),
+                    priceChart: document.getElementById('price-chart'),
+                    rulesBtn: document.getElementById('rules-btn'),
+                    nextRoundBtn: document.getElementById('next-round-btn'),
+                    rulesModal: document.getElementById('rules-modal'),
+                    closeRules: document.getElementById('close-rules'),
+                    closeRulesBtn: document.getElementById('close-rules-btn'),
+                    resultModal: document.getElementById('result-modal'),
+                    winnerMessage: document.getElementById('winner-message'),
+                    finalCash: document.getElementById('final-cash'),
+                    finalGoods: document.getElementById('final-goods'),
+                    finalAssets: document.getElementById('final-assets'),
+                    restartBtn: document.getElementById('restart-btn'),
+                    newsFeed: document.getElementById('news-feed'),
+                    playerRankings: document.getElementById('player-rankings'),
+                    playerGoods: document.getElementById('player-goods'),
+                    goodsPrices: document.getElementById('goods-prices'),
+                    officialSellerPlayer: document.getElementById('official-seller-player'),
+                    officialSellGoods: document.getElementById('official-sell-goods'),
+                    officialSellAmount: document.getElementById('official-sell-amount'),
+                    officialSellPrice: document.getElementById('official-sell-price'),
+                    officialSellTotal: document.getElementById('official-sell-total'),
+                    officialSellBtn: document.getElementById('official-sell-btn')
+                };
+            },
+
+            // 更新玩家列表
+            updatePlayerList(players, currentPlayerId) {
+                const { playerList } = this.elements;
+                if (players.length === 0) {
+                    playerList.innerHTML = '<div class="player-item">暂无玩家，请添加玩家</div>';
+                    return;
+                }
+
+                playerList.innerHTML = players.map(player => `
+                    <div class="player-item ${player.id === currentPlayerId ? 'active-player' : ''}" data-player-id="${player.id}">
+                        <div style="display: flex; align-items: center;">
+                            <span class="player-name">${player.name}</span>
+                        </div>
+                        <div class="player-assets">${Tool.calculateTotalAssets(player)}元</div>
+                    </div>
+                `).join('');
+
+                // 重新绑定点击事件
+                this.elements.playerList.querySelectorAll('.player-item').forEach(item => {
+                    item.addEventListener('click', () => {
+                        GameState.state.currentPlayerId = item.dataset.playerId;
+                        UIManager.updateUI();
+                    });
+                });
+            },
+
+            // 更新玩家排行榜
+            updatePlayerRankings(players) {
+                const { playerRankings } = this.elements;
+                if (players.length === 0) {
+                    playerRankings.innerHTML = '<div class="player-item">暂无玩家</div>';
+                    return;
+                }
+
+                const sortedPlayers = [...players].sort((a, b) =>
+                    Tool.calculateTotalAssets(b) - Tool.calculateTotalAssets(a)
+                );
+
+                playerRankings.innerHTML = sortedPlayers.map((player, index) => {
+                    const rankClass = index === 0 ? 'rank-1' : index === 1 ? 'rank-2' : index === 2 ? 'rank-3' : '';
+                    return `
+                        <div class="player-item">
+                            <div style="display: flex; align-items: center;">
+                                <div class="player-rank ${rankClass}">${index + 1}</div>
+                                <span class="player-name">${player.name}</span>
+                            </div>
+                            <div class="player-assets">${Tool.calculateTotalAssets(player)}元</div>
+                        </div>
+                    `;
+                }).join('');
+            },
+
+            // 更新交易选择框
+            updateTradeSelects(players, goods) {
+                const { sellerPlayer, buyerPlayer, tradeGoods, officialSellerPlayer, officialSellGoods } = this.elements;
+
+                // 保存当前选中值
+                const currentSeller = sellerPlayer.value;
+                const currentBuyer = buyerPlayer.value;
+                const currentGood = tradeGoods.value;
+                const currentOfficialSeller = officialSellerPlayer.value;
+                const currentOfficialGood = officialSellGoods.value;
+
+                // 玩家选择框
+                const playerOptions = players.map(p => `<option value="${p.id}">${p.name}</option>`).join('');
+                sellerPlayer.innerHTML = `<option value="">选择出售玩家</option>${playerOptions}`;
+                buyerPlayer.innerHTML = `<option value="">选择购买玩家</option>${playerOptions}`;
+                officialSellerPlayer.innerHTML = `<option value="">选择出售玩家</option>${playerOptions}`;
+
+                // 商品选择框
+                const goodsOptions = goods.map(g => `<option value="${g.id}">${g.name} (${g.currentPrice}元)</option>`).join('');
+                tradeGoods.innerHTML = `<option value="">选择交易商品</option>${goodsOptions}`;
+                officialSellGoods.innerHTML = `<option value="">选择要出售的商品</option>${goodsOptions}`;
+
+                // 恢复选中值（如果仍有效）
+                if (currentSeller && players.some(p => p.id === currentSeller)) {
+                    sellerPlayer.value = currentSeller;
+                }
+                if (currentBuyer && players.some(p => p.id === currentBuyer)) {
+                    buyerPlayer.value = currentBuyer;
+                }
+                if (currentGood && goods.some(g => g.id === currentGood)) {
+                    tradeGoods.value = currentGood;
+                }
+                if (currentOfficialSeller && players.some(p => p.id === currentOfficialSeller)) {
+                    officialSellerPlayer.value = currentOfficialSeller;
+                }
+                if (currentOfficialGood && goods.some(g => g.id === currentOfficialGood)) {
+                    officialSellGoods.value = currentOfficialGood;
+                }
+
+                // 如果没有选中值且有当前玩家，则默认选中当前玩家
+                if (!sellerPlayer.value && GameState.state.currentPlayerId) {
+                    sellerPlayer.value = GameState.state.currentPlayerId;
+                }
+                if (!officialSellerPlayer.value && GameState.state.currentPlayerId) {
+                    officialSellerPlayer.value = GameState.state.currentPlayerId;
+                }
+            },
+
+            // 更新商品价格显示
+            updateGoodsPrices(goods) {
+                const { goodsPrices } = this.elements;
+                goodsPrices.innerHTML = goods.map(good => {
+                    let changeIndicator = '';
+                    if (good.priceHistory.length > 1) {
+                        const change = good.currentPrice - good.priceHistory[good.priceHistory.length - 2];
+                        if (change > 0) {
+                            changeIndicator = `<span class="price-change price-up">+${change}元</span>`;
+                        } else if (change < 0) {
+                            changeIndicator = `<span class="price-change price-down">${change}元</span>`;
+                        }
+                    }
+                    return `
+                        <div class="price-item">
+                            <span class="goods-name">${good.name}</span>
+                            <span>${good.currentPrice}元 ${changeIndicator}</span>
+                        </div>
+                    `;
+                }).join('');
+            },
+
+            // 更新当前玩家信息
+            updateCurrentPlayerInfo(player) {
+                const { currentPlayerName, cash, goods, totalAssets, playerGoods } = this.elements;
+                currentPlayerName.textContent = player.name;
+                cash.textContent = player.cash;
+                goods.textContent = Tool.calculateTotalGoods(player);
+                totalAssets.textContent = Tool.calculateTotalAssets(player);
+
+                // 玩家商品列表
+                if (Object.keys(player.goods || {}).length === 0) {
+                    playerGoods.innerHTML = '<div class="goods-item">暂无商品</div>';
+                    return;
+                }
+
+                playerGoods.innerHTML = Object.entries(player.goods).map(([goodId, qty]) => {
+                    const good = GameState.state.goods.find(g => g.id === goodId);
+                    return good && qty > 0 ? `
+                        <div class="goods-item">
+                            <span class="goods-name">${good.name}</span>
+                            <span class="goods-quantity">${qty}件 (价值: ${qty * good.currentPrice}元)</span>
+                        </div>
+                    ` : '';
+                }).join('');
+            },
+
+            // 重置当前玩家信息
+            resetCurrentPlayerInfo() {
+                const { currentPlayerName, cash, goods, totalAssets, playerGoods } = this.elements;
+                currentPlayerName.textContent = "未选择";
+                cash.textContent = "0";
+                goods.textContent = "0";
+                totalAssets.textContent = "0";
+                playerGoods.innerHTML = '<div class="goods-item">请先选择玩家</div>';
+            },
+
+            // 更新市场状态（热度、趋势）
+            updateMarketStats(currentRound, trades, goods) {
+                const { currentRound: roundElem, marketHeat, marketTrend } = this.elements;
+                roundElem.textContent = `${currentRound}/${GameState.state.totalRounds}`;
+
+                // 市场热度
+                const currentTrades = trades.filter(t => t.round === currentRound).length;
+                if (currentTrades > 10) {
+                    marketHeat.textContent = "高涨";
+                    marketHeat.style.color = "#dc3545";
+                } else if (currentTrades > 5) {
+                    marketHeat.textContent = "中等";
+                    marketHeat.style.color = "#ffc107";
+                } else {
+                    marketHeat.textContent = "低迷";
+                    marketHeat.style.color = "#28a745";
+                }
+
+                // 市场趋势
+                if (currentRound <= 1) {
+                    marketTrend.textContent = "未知";
+                    marketTrend.style.color = "#6c757d";
+                    return;
+                }
+
+                const priceChanges = goods.map(good => {
+                    const current = good.currentPrice;
+                    const prev = good.priceHistory[good.priceHistory.length - 2];
+                    return current - prev;
+                });
+                const avgChange = priceChanges.reduce((a, b) => a + b, 0) / priceChanges.length;
+
+                if (avgChange > 5) {
+                    marketTrend.textContent = "上涨";
+                    marketTrend.style.color = "#28a745";
+                } else if (avgChange < -5) {
+                    marketTrend.textContent = "下跌";
+                    marketTrend.style.color = "#dc3545";
+                } else {
+                    marketTrend.textContent = "平稳";
+                    marketTrend.style.color = "#6c757d";
+                }
+            },
+
+            // 更新新闻 feed
+            updateNewsFeed(news) {
+                this.elements.newsFeed.innerHTML = news.map(item =>
+                    `<div class="news-item">${item}</div>`
+                ).join('');
+            },
+
+            // 更新下一轮按钮状态
+            updateNextRoundBtn(currentRound, totalRounds) {
+                const { nextRoundBtn } = this.elements;
+                nextRoundBtn.disabled = currentRound >= totalRounds;
+                nextRoundBtn.textContent = currentRound >= totalRounds ? "游戏结束" : "下一轮";
+            },
+
+            // 渲染价格图表
+            renderPriceChart(goods) {
+                const { priceChart } = this.elements;
+                priceChart.innerHTML = '';
+
+                // 选择要显示的商品（魔法水晶）
+                const targetGood = goods.find(g => g.id === "crystal");
+                if (!targetGood) return;
+
+                const maxPrice = Math.max(...targetGood.priceHistory);
+                targetGood.priceHistory.forEach((price, index) => {
+                    const barHeight = maxPrice > 0 ? (price / maxPrice) * 150 : 0;
+                    priceChart.innerHTML += `
+                        <div style="position: relative; display: flex; flex-direction: column; align-items: center;">
+                            <div class="chart-value">${price}</div>
+                            <div class="chart-bar" style="height: ${barHeight}px;"></div>
+                            <div class="chart-label">第${index + 1}轮</div>
+                        </div>
+                    `;
+                });
+            },
+
+            // 更新官方出售价格显示
+            updateOfficialSellPrice() {
+                const { officialSellerPlayer, officialSellGoods, officialSellAmount, officialSellPrice, officialSellTotal } = this.elements;
+                
+                const playerId = officialSellerPlayer.value;
+                const goodId = officialSellGoods.value;
+                const amount = parseInt(officialSellAmount.value) || 0;
+                
+                if (playerId && goodId) {
+                    const player = GameState.state.players.find(p => p.id === playerId);
+                    const good = GameState.state.goods.find(g => g.id === goodId);
+                    
+                    if (player && good) {
+                        officialSellPrice.textContent = good.currentPrice;
+                        officialSellTotal.textContent = amount * good.currentPrice;
+                        return;
+                    }
+                }
+                
+                officialSellPrice.textContent = "0";
+                officialSellTotal.textContent = "0";
+            }
+        };
+
+        // 3. 工具函数模块：封装通用计算逻辑
+        const Tool = {
+            // 计算玩家总商品数量
+            calculateTotalGoods(player) {
+                return Object.values(player.goods || {}).reduce((total, qty) => total + qty, 0);
+            },
+
+            // 计算玩家总资产
+            calculateTotalAssets(player) {
+                let total = player.cash;
+                Object.entries(player.goods || {}).forEach(([goodId, qty]) => {
+                    const good = GameState.state.goods.find(g => g.id === goodId);
+                    total += good ? qty * good.currentPrice : 0;
+                });
+                return total;
+            },
+
+            // 生成随机市场新闻
+            generateRandomNews() {
+                const newsPool = [
+                    "有消息称新的矿脉被发现，可能影响商品供应。",
+                    "大型贸易商调整库存策略，市场预期发生变化。",
+                    "季节性因素开始影响商品需求。",
+                    "国际市场价格波动影响本地市场情绪。",
+                    "技术分析师指出关键价格支撑位。"
+                ];
+                return newsPool[Math.floor(Math.random() * newsPool.length)];
+            },
+
+            // 生成价格变化新闻
+            generatePriceChangeNews(goods) {
+                const news = [];
+                let maxIncrease = { good: null, change: 0 };
+                let maxDecrease = { good: null, change: 0 };
+
+                goods.forEach(good => {
+                    if (good.priceHistory.length < 2) return;
+                    const change = good.currentPrice - good.priceHistory[good.priceHistory.length - 2];
+
+                    if (change > maxIncrease.change) maxIncrease = { good, change };
+                    if (change < maxDecrease.change) maxDecrease = { good, change };
+                });
+
+                if (maxIncrease.good) {
+                    const intensity = maxIncrease.change > 30 ? "大幅" : maxIncrease.change > 15 ? "明显" : "小幅";
+                    news.push(`市场对${maxIncrease.good.name}需求旺盛，价格${intensity}上涨！`);
+                }
+                if (maxDecrease.good) {
+                    const intensity = maxDecrease.change < -30 ? "大幅" : maxDecrease.change < -15 ? "明显" : "小幅";
+                    news.push(`市场对${maxDecrease.good.name}需求疲软，价格${intensity}下跌！`);
+                }
+
+                return news;
+            }
+        };
+
+        // 4. 交易管理模块（修复版）
+        const TradeManager = {
+            // 交易验证逻辑
+            validateTrade(sellerId, buyerId, goodId, amount, price) {
+                const { state } = GameState;
+                const errors = [];
+
+                // 基础验证
+                if (!sellerId || !buyerId) {
+                    errors.push('请选择出售方和购买方');
+                }
+                if (sellerId === buyerId) {
+                    errors.push('出售方和购买方不能是同一玩家');
+                }
+                if (!goodId) {
+                    errors.push('请选择交易商品');
+                }
+
+                // 转换为数字并验证
+                const amountNum = parseInt(amount, 10);
+                const priceNum = parseFloat(price);
+
+                if (isNaN(amountNum) || amountNum <= 0) {
+                    errors.push('请输入有效的整数交易数量（大于0）');
+                }
+                if (isNaN(priceNum) || priceNum <= 0) {
+                    errors.push('请输入有效的交易价格（大于0）');
+                }
+
+                if (errors.length > 0) {
+                    return { valid: false, errors };
+                }
+
+                // 获取相关实体
+                const seller = state.players.find(p => p.id === sellerId);
+                const buyer = state.players.find(p => p.id === buyerId);
+                const good = state.goods.find(g => g.id === goodId);
+
+                // 实体存在性验证
+                if (!seller) errors.push('出售方不存在');
+                if (!buyer) errors.push('购买方不存在');
+                if (!good) errors.push('选择的商品不存在');
+
+                if (errors.length > 0) {
+                    return { valid: false, errors };
+                }
+
+                // 交易条件验证
+                const sellerQty = seller.goods[goodId] || 0;
+                const totalCost = amountNum * priceNum;
+
+                if (sellerQty < amountNum) {
+                    errors.push(`出售方${seller.name}的${good.name}数量不足（当前: ${sellerQty}）`);
+                }
+                if (buyer.cash < totalCost) {
+                    errors.push(`购买方${buyer.name}现金不足（需要: ${totalCost.toFixed(0)}, 现有: ${buyer.cash}）`);
+                }
+
+                return {
+                    valid: errors.length === 0,
+                    errors,
+                    seller,
+                    buyer,
+                    good,
+                    amount: amountNum,
+                    price: priceNum,
+                    totalCost
+                };
+            },
+
+            // 执行交易逻辑
+            executeTrade(sellerId, buyerId, goodId, amount, price) {
+                // 先验证交易合法性
+                const validation = this.validateTrade(sellerId, buyerId, goodId, amount, price);
+                if (!validation.valid) {
+                    alert(validation.errors.join('\n'));
+                    return false;
+                }
+
+                const { seller, buyer, good, amount: amountNum, price: priceNum, totalCost } = validation;
+                const { state } = GameState;
+
+                try {
+                    // 1. 确保玩家对象有goods属性
+                    if (!seller.goods) seller.goods = {};
+                    if (!buyer.goods) buyer.goods = {};
+
+                    // 2. 更新出售方数据
+                    seller.cash = Math.round(seller.cash + totalCost);
+                    seller.goods[goodId] = (seller.goods[goodId] || 0) - amountNum;
+
+                    // 3. 更新购买方数据
+                    buyer.cash = Math.round(buyer.cash - totalCost);
+                    buyer.goods[goodId] = (buyer.goods[goodId] || 0) + amountNum;
+
+                    // 4. 记录交易历史
+                    const tradeRecord = {
+                        id: `trade-${Date.now()}`,
+                        round: state.currentRound,
+                        timestamp: new Date().toISOString(),
+                        sellerId,
+                        sellerName: seller.name,
+                        buyerId,
+                        buyerName: buyer.name,
+                        goodId,
+                        goodName: good.name,
+                        amount: amountNum,
+                        price: priceNum,
+                        totalCost
+                    };
+
+                    // 添加到全局历史
+                    state.globalTradeHistory.push(tradeRecord);
+
+                    // 初始化玩家交易历史（如果不存在）
+                    if (!seller.tradeHistory) seller.tradeHistory = [];
+                    if (!buyer.tradeHistory) buyer.tradeHistory = [];
+
+                    // 添加到玩家个人历史
+                    seller.tradeHistory.push(tradeRecord);
+                    buyer.tradeHistory.push(tradeRecord);
+
+                    // 5. 更新销售统计
+                    state.roundSales[goodId] = (state.roundSales[goodId] || 0) + amountNum;
+
+                    // 6. 记录市场新闻
+                    GameState.addNews(`${seller.name}以${priceNum}元/件的价格向${buyer.name}出售了${amountNum}件${good.name}，总价值${totalCost.toFixed(0)}元`);
+
+                    return true;
+                } catch (error) {
+                    console.error('交易执行失败:', error);
+                    alert('交易过程中发生错误，请重试');
+                    return false;
+                }
+            },
+
+            // 向官方出售商品
+            sellToOfficial(playerId, goodId, amount) {
+                const { state } = GameState;
+                const player = state.players.find(p => p.id === playerId);
+                const good = state.goods.find(g => g.id === goodId);
+
+                if (!player) {
+                    alert('玩家不存在');
+                    return false;
+                }
+
+                if (!good) {
+                    alert('商品不存在');
+                    return false;
+                }
+
+                const amountNum = parseInt(amount, 10);
+                if (isNaN(amountNum) || amountNum <= 0) {
+                    alert('请输入有效的出售数量');
+                    return false;
+                }
+
+                // 检查玩家是否有足够的商品
+                const playerQty = player.goods[goodId] || 0;
+                if (playerQty < amountNum) {
+                    alert(`玩家 ${player.name} 没有足够的${good.name}（当前: ${playerQty}）`);
+                    return false;
+                }
+
+                try {
+                    // 计算总金额
+                    const totalAmount = amountNum * good.currentPrice;
+
+                    // 更新玩家数据
+                    player.cash = Math.round(player.cash + totalAmount);
+                    player.goods[goodId] = playerQty - amountNum;
+
+                    // 记录交易历史
+                    const tradeRecord = {
+                        id: `official-${Date.now()}`,
+                        round: state.currentRound,
+                        timestamp: new Date().toISOString(),
+                        sellerId: playerId,
+                        sellerName: player.name,
+                        buyerId: "official",
+                        buyerName: "官方",
+                        goodId,
+                        goodName: good.name,
+                        amount: amountNum,
+                        price: good.currentPrice,
+                        totalCost: totalAmount
+                    };
+
+                    // 添加到全局历史
+                    state.globalTradeHistory.push(tradeRecord);
+
+                    // 添加到玩家个人历史
+                    if (!player.tradeHistory) player.tradeHistory = [];
+                    player.tradeHistory.push(tradeRecord);
+
+                    // 更新销售统计
+                    state.roundSales[goodId] = (state.roundSales[goodId] || 0) + amountNum;
+
+                    // 记录市场新闻
+                    GameState.addNews(`${player.name}向官方出售了${amountNum}件${good.name}，获得${totalAmount}元`);
+
+                    return true;
+                } catch (error) {
+                    console.error('官方交易执行失败:', error);
+                    alert('交易过程中发生错误，请重试');
+                    return false;
+                }
+            },
+
+            // 渲染交易历史
+            renderTradeHistory(history, filter = {}) {
+                const { tradeHistory } = DOMManager.elements;
+
+                if (history.length === 0) {
+                    tradeHistory.innerHTML = '<div class="history-item">暂无交易记录</div>';
+                    return;
+                }
+
+                // 应用筛选条件
+                let filteredHistory = [...history];
+                if (filter.playerId) {
+                    filteredHistory = filteredHistory.filter(trade =>
+                        trade.sellerId === filter.playerId || trade.buyerId === filter.playerId
+                    );
+                }
+                if (filter.round) {
+                    filteredHistory = filteredHistory.filter(trade => trade.round === filter.round);
+                }
+
+                // 格式化显示
+                tradeHistory.innerHTML = filteredHistory.slice().reverse().map(trade => `
+                    <div class="history-item" data-trade-id="${trade.id}">
+                        <span class="history-time">${new Date(trade.timestamp).toLocaleString()}</span>
+                        <span class="history-participants">
+                            <strong class="seller">${trade.sellerName}</strong>
+                            <span class="trade-arrow">→</span>
+                            <strong class="buyer">${trade.buyerName}</strong>
+                        </span>
+                        <span class="history-goods">${trade.amount}件${trade.goodName}</span>
+                        <span class="history-price">单价: ${trade.price}元</span>
+                        <span class="history-total">总计: ${trade.totalCost.toFixed(0)}元</span>
+                    </div>
+                `).join('');
+            }
+        };
+
+        // 5. UI更新模块：统一UI更新入口
+        const UIManager = {
+            updateUI() {
+                const { state } = GameState;
+                const currentPlayer = GameState.getCurrentPlayer();
+
+                // 批量更新DOM
+                DOMManager.updatePlayerList(state.players, state.currentPlayerId);
+                DOMManager.updatePlayerRankings(state.players);
+                DOMManager.updateTradeSelects(state.players, state.goods);
+                DOMManager.updateGoodsPrices(state.goods);
+                DOMManager.updateMarketStats(state.currentRound, state.globalTradeHistory, state.goods);
+                DOMManager.renderPriceChart(state.goods);
+                DOMManager.updateNextRoundBtn(state.currentRound, state.totalRounds);
+                DOMManager.updateNewsFeed(state.news);
+                DOMManager.updateOfficialSellPrice();
+
+                // 更新当前玩家信息
+                if (currentPlayer) {
+                    DOMManager.updateCurrentPlayerInfo(currentPlayer);
+                    this.updateTradeHistory();
+                } else {
+                    DOMManager.resetCurrentPlayerInfo();
+                    TradeManager.renderTradeHistory([], {});
+                }
+            },
+
+            // 更新交易历史
+            updateTradeHistory() {
+                const { state } = GameState;
+                const currentPlayer = GameState.getCurrentPlayer();
+
+                // 渲染当前玩家相关的交易
+                TradeManager.renderTradeHistory(
+                    state.globalTradeHistory,
+                    currentPlayer ? { playerId: currentPlayer.id } : {}
+                );
+            }
+        };
+
+        // 6. 事件处理模块：统一管理事件逻辑
+        const EventHandler = {
+            // 初始化所有事件绑定
+            initEvents() {
+                const { elements } = DOMManager;
+
+                // 添加玩家
+                elements.addPlayerBtn.addEventListener('click', this.handleAddPlayer);
+                elements.playerName.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') this.handleAddPlayer();
+                });
+
+                // 执行交易
+                elements.tradeBtn.addEventListener('click', this.handleTrade);
+
+                // 官方出售
+                elements.officialSellBtn.addEventListener('click', this.handleOfficialSell);
+                elements.officialSellerPlayer.addEventListener('change', () => DOMManager.updateOfficialSellPrice());
+                elements.officialSellGoods.addEventListener('change', () => DOMManager.updateOfficialSellPrice());
+                elements.officialSellAmount.addEventListener('input', () => DOMManager.updateOfficialSellPrice());
+
+                // 下一轮
+                elements.nextRoundBtn.addEventListener('click', this.handleNextRound);
+
+                // 规则弹窗
+                elements.rulesBtn.addEventListener('click', () => {
+                    elements.rulesModal.style.display = 'flex';
+                });
+                elements.closeRules.addEventListener('click', () => {
+                    elements.rulesModal.style.display = 'none';
+                });
+                elements.closeRulesBtn.addEventListener('click', () => {
+                    elements.rulesModal.style.display = 'none';
+                });
+
+                // 重新开始
+                elements.restartBtn.addEventListener('click', this.handleRestart);
+
+                // 点击模态框外部关闭
+                window.addEventListener('click', (e) => {
+                    if (e.target === elements.rulesModal) elements.rulesModal.style.display = 'none';
+                    if (e.target === elements.resultModal) elements.resultModal.style.display = 'none';
+                });
+            },
+
+            // 处理添加玩家
+            handleAddPlayer() {
+                const { playerName } = DOMManager.elements;
+                const name = playerName.value.trim();
+
+                if (!name) {
+                    alert('请输入玩家姓名');
+                    return;
+                }
+
+                // 初始化玩家商品（0-3件随机）
+                const initialGoods = GameState.state.goods.reduce((obj, good) => {
+                    obj[good.id] = Math.floor(Math.random() * 4);
+                    return obj;
+                }, {});
+
+                // 添加新玩家
+                GameState.addPlayer({
+                    id: Date.now().toString(),
+                    name,
+                    cash: 1000,
+                    goods: initialGoods,
+                    tradeHistory: []
+                });
+
+                // 更新状态和UI
+                GameState.addNews(`新玩家 ${name} 加入市场！`);
+                playerName.value = '';
+                UIManager.updateUI();
+            },
+
+            // 处理交易逻辑（修复版）
+            handleTrade() {
+                const { sellerPlayer, buyerPlayer, tradeGoods, tradeAmount, tradePrice } = DOMManager.elements;
+
+                // 获取交易参数
+                const sellerId = sellerPlayer.value;
+                const buyerId = buyerPlayer.value;
+                const goodId = tradeGoods.value;
+                const amount = tradeAmount.value;
+                const price = tradePrice.value;
+
+                // 使用交易管理器执行交易
+                const success = TradeManager.executeTrade(sellerId, buyerId, goodId, amount, price);
+
+                // 交易成功则清空输入，但保留选择
+                if (success) {
+                    tradeAmount.value = '';
+                    tradePrice.value = '';
+                    // 强制UI更新以反映最新状态
+                    UIManager.updateUI();
+                }
+            },
+
+            // 处理向官方出售
+            handleOfficialSell() {
+                const { officialSellerPlayer, officialSellGoods, officialSellAmount } = DOMManager.elements;
+
+                const playerId = officialSellerPlayer.value;
+                const goodId = officialSellGoods.value;
+                const amount = officialSellAmount.value;
+
+                if (!playerId) {
+                    alert('请选择出售玩家');
+                    return;
+                }
+
+                if (!goodId) {
+                    alert('请选择要出售的商品');
+                    return;
+                }
+
+                if (!amount || parseInt(amount) <= 0) {
+                    alert('请输入有效的出售数量');
+                    return;
+                }
+
+                // 执行官方出售
+                const success = TradeManager.sellToOfficial(playerId, goodId, amount);
+
+                if (success) {
+                    // 清空输入
+                    officialSellAmount.value = '';
+                    // 更新UI
+                    UIManager.updateUI();
+                }
+            },
+
+            // 处理下一轮 - 修改价格调整逻辑
+            handleNextRound() {
+                const { state } = GameState;
+                const { nextRoundBtn } = DOMManager.elements;
+
+                // 防重复点击
+                nextRoundBtn.disabled = true;
+                nextRoundBtn.textContent = "处理中...";
+
+                // 检查玩家数量
+                if (state.players.length === 0) {
+                    alert('请先添加玩家');
+                    nextRoundBtn.textContent = "下一轮";
+                    nextRoundBtn.disabled = false;
+                    return;
+                }
+
+                // 调整商品价格 - 确保每轮有涨有跌
+                const priceChanges = [];
+                
+                state.goods.forEach(good => {
+                    const sales = state.roundSales[good.id];
+                    const baseSales = 5;
+                    let priceChange = 0;
+
+                    // 供需影响价格
+                    if (sales > baseSales) {
+                        priceChange = -Math.min(20, (sales - baseSales) * 2);
+                    } else if (sales < baseSales) {
+                        priceChange = Math.min(20, (baseSales - sales) * 2);
+                    }
+
+                    // 随机因素（-5到5）
+                    priceChange += Math.random() * 10 - 5;
+                    
+                    // 记录价格变化
+                    priceChanges.push(priceChange);
+                    
+                    // 价格下限保护（不低于基础价50%）
+                    const newPrice = Math.max(good.currentPrice + priceChange, good.basePrice * 0.5);
+
+                    GameState.updateGoodsPrice(good.id, newPrice);
+                    state.roundSales[good.id] = 0; // 重置本轮销售记录
+                });
+
+                // 确保每轮至少有涨有跌
+                const hasIncrease = priceChanges.some(change => change > 0);
+                const hasDecrease = priceChanges.some(change => change < 0);
+                
+                if (!hasIncrease || !hasDecrease) {
+                    // 如果所有商品都涨或都跌，强制调整一个商品的价格
+                    const randomIndex = Math.floor(Math.random() * state.goods.length);
+                    const targetGood = state.goods[randomIndex];
+                    
+                    // 如果所有商品都涨，强制让一个商品跌
+                    if (!hasDecrease) {
+                        const decreaseAmount = Math.max(5, Math.floor(targetGood.currentPrice * 0.1));
+                        const newPrice = Math.max(targetGood.currentPrice - decreaseAmount, targetGood.basePrice * 0.5);
+                        GameState.updateGoodsPrice(targetGood.id, newPrice);
+                        GameState.addNews(`市场调整：${targetGood.name}价格下跌${decreaseAmount}元`);
+                    }
+                    // 如果所有商品都跌，强制让一个商品涨
+                    else if (!hasIncrease) {
+                        const increaseAmount = Math.max(5, Math.floor(targetGood.currentPrice * 0.1));
+                        const newPrice = targetGood.currentPrice + increaseAmount;
+                        GameState.updateGoodsPrice(targetGood.id, newPrice);
+                        GameState.addNews(`市场调整：${targetGood.name}价格上涨${increaseAmount}元`);
+                    }
+                }
+
+                // 进入下一轮
+                state.currentRound++;
+
+                // 生成新闻
+                GameState.addNews(`第${state.currentRound}轮开始！`);
+                const priceNews = Tool.generatePriceChangeNews(state.goods);
+                priceNews.forEach(news => GameState.addNews(news));
+                GameState.addNews(Tool.generateRandomNews());
+
+                // 检查是否游戏结束
+                setTimeout(() => {
+                    if (state.currentRound >= state.totalRounds) {
+                        EventHandler.handleGameEnd();
+                    }
+                    UIManager.updateUI();
+                }, 300);
+            },
+
+            // 处理游戏结束
+            handleGameEnd() {
+                const { state } = GameState;
+                const { resultModal, winnerMessage, finalCash, finalGoods, finalAssets } = DOMManager.elements;
+
+                // 排序玩家（按资产）
+                const sortedPlayers = [...state.players].sort((a, b) =>
+                    Tool.calculateTotalAssets(b) - Tool.calculateTotalAssets(a)
+                );
+                const winner = sortedPlayers[0];
+                const currentPlayer = GameState.getCurrentPlayer();
+
+                // 显示结果
+                winnerMessage.textContent = `恭喜 ${winner.name} 成为本轮游戏的获胜者！`;
+                if (currentPlayer) {
+                    finalCash.textContent = currentPlayer.cash;
+                    finalGoods.textContent = Tool.calculateTotalGoods(currentPlayer);
+                    finalAssets.textContent = Tool.calculateTotalAssets(currentPlayer);
+                }
+
+                resultModal.style.display = 'flex';
+            },
+
+            // 处理重新开始
+            handleRestart() {
+                GameState.reset();
+                DOMManager.elements.resultModal.style.display = 'none';
+                UIManager.updateUI();
+            }
+        };
+
+        // 7. 游戏主入口：初始化所有模块
+        const Game = {
+            init() {
+                DOMManager.initElements();
+                GameState.initRoundSales();
+                EventHandler.initEvents();
+                UIManager.updateUI();
+            }
+        };
+
+        // 启动游戏
+        Game.init();
+    </script>
+</body>
+
+</html>

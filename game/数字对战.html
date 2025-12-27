@@ -1,0 +1,883 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>数字战线 - 数学策略游戏</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Arial', sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #1a2a6c, #b21f1f, #fdbb2d);
+            color: white;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background-color: rgba(0, 0, 0, 0.7);
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #fdbb2d;
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            color: #fdbb2d;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+        }
+        
+        .game-info {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            background-color: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+        }
+        
+        .team {
+            flex: 1;
+            text-align: center;
+            padding: 10px;
+            border-radius: 8px;
+            margin: 0 10px;
+        }
+        
+        .red-team {
+            background-color: rgba(178, 31, 31, 0.3);
+            border: 2px solid #b21f1f;
+        }
+        
+        .blue-team {
+            background-color: rgba(26, 42, 108, 0.3);
+            border: 2px solid #1a2a6c;
+        }
+        
+        .team-name {
+            font-size: 1.5rem;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+        
+        .score {
+            font-size: 2rem;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+        
+        .battlefield {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 30px 0;
+            padding: 20px;
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            min-height: 200px;
+            position: relative;
+        }
+        
+        .battle-line {
+            position: absolute;
+            top: 50%;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background-color: #fdbb2d;
+            z-index: 1;
+        }
+        
+        .stronghold {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background-color: #444;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.5rem;
+            font-weight: bold;
+            z-index: 2;
+            position: relative;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+        }
+        
+        .stronghold.red {
+            background-color: #b21f1f;
+            transform: scale(1.1);
+        }
+        
+        .stronghold.blue {
+            background-color: #1a2a6c;
+            transform: scale(1.1);
+        }
+        
+        .stronghold.neutral {
+            background-color: #666;
+        }
+        
+        .cards-container {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+        }
+        
+        .cards {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 10px;
+            padding: 15px;
+            border-radius: 10px;
+            width: 45%;
+        }
+        
+        .red-cards {
+            background-color: rgba(178, 31, 31, 0.2);
+        }
+        
+        .blue-cards {
+            background-color: rgba(26, 42, 108, 0.2);
+        }
+        
+        .card {
+            width: 60px;
+            height: 80px;
+            background-color: #fff;
+            color: #333;
+            border-radius: 8px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.5rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 6px 10px rgba(0, 0, 0, 0.3);
+        }
+        
+        .card.used {
+            opacity: 0.4;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .card.hidden .card-front {
+            transform: rotateY(180deg);
+        }
+        
+        .card.hidden .card-back {
+            transform: rotateY(0deg);
+        }
+        
+        .card-face {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: transform 0.6s;
+            border-radius: 8px;
+        }
+        
+        .card-front {
+            background-color: white;
+            color: #333;
+        }
+        
+        .card-back {
+            background: linear-gradient(45deg, #1a2a6c, #b21f1f);
+            transform: rotateY(180deg);
+        }
+        
+        .card-back::after {
+            content: "?";
+            color: white;
+            font-size: 1.8rem;
+            font-weight: bold;
+        }
+        
+        .red-card .card-front {
+            border: 3px solid #b21f1f;
+        }
+        
+        .blue-card .card-front {
+            border: 3px solid #1a2a6c;
+        }
+        
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 30px;
+        }
+        
+        button {
+            padding: 12px 25px;
+            font-size: 1.1rem;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+        }
+        
+        button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 10px rgba(0, 0, 0, 0.3);
+        }
+        
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        #startBtn, #nextRoundBtn {
+            background-color: #fdbb2d;
+            color: #333;
+        }
+        
+        #resetBtn {
+            background-color: #666;
+            color: white;
+        }
+        
+        .confirm-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 15px;
+        }
+        
+        .confirm-btn {
+            background-color: #4CAF50;
+            color: white;
+        }
+        
+        .message {
+            text-align: center;
+            margin: 20px 0;
+            padding: 15px;
+            border-radius: 8px;
+            font-size: 1.2rem;
+            min-height: 60px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+        
+        .round-info {
+            text-align: center;
+            margin-bottom: 15px;
+            font-size: 1.3rem;
+            color: #fdbb2d;
+        }
+        
+        .instructions {
+            margin-top: 30px;
+            padding: 15px;
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            line-height: 1.6;
+        }
+        
+        .instructions h3 {
+            margin-bottom: 10px;
+            color: #fdbb2d;
+        }
+        
+        .selection-area {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 30px;
+            margin: 20px 0;
+        }
+        
+        .selected-card {
+            width: 100px;
+            height: 140px;
+            border-radius: 10px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 2.5rem;
+            font-weight: bold;
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+        }
+        
+        .hidden-selected {
+            background: linear-gradient(45deg, #1a2a6c, #b21f1f);
+            color: white;
+        }
+        
+        .hidden-selected::after {
+            content: "?";
+        }
+        
+        @keyframes reveal {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+            100% { transform: scale(1); }
+        }
+        
+        .reveal {
+            animation: reveal 0.5s ease-in-out;
+        }
+        
+        .revealed-card {
+            width: 100px;
+            height: 140px;
+            border-radius: 10px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 2.5rem;
+            font-weight: bold;
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+            animation: reveal 0.5s ease-in-out;
+        }
+        
+        .red-revealed {
+            background-color: #b21f1f;
+            color: white;
+        }
+        
+        .blue-revealed {
+            background-color: #1a2a6c;
+            color: white;
+        }
+        
+        @media (max-width: 768px) {
+            .battlefield {
+                flex-direction: column;
+                gap: 20px;
+            }
+            
+            .battle-line {
+                display: none;
+            }
+            
+            .cards-container {
+                flex-direction: column;
+                gap: 20px;
+            }
+            
+            .cards {
+                width: 100%;
+            }
+            
+            .selection-area {
+                flex-direction: column;
+                gap: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>数字战线</h1>
+            <p>数学策略游戏 - 通过策略性地出牌来争夺据点</p>
+        </header>
+        
+        <div class="game-info">
+            <div class="team red-team">
+                <div class="team-name">红队</div>
+                <div class="score" id="redScore">0</div>
+                <div>已用卡牌: <span id="redUsed">0</span>/10</div>
+            </div>
+            
+            <div class="team blue-team">
+                <div class="team-name">蓝队</div>
+                <div class="score" id="blueScore">0</div>
+                <div>已用卡牌: <span id="blueUsed">0</span>/10</div>
+            </div>
+        </div>
+        
+        <div class="round-info" id="roundInfo">准备争夺据点 A</div>
+        
+        <div class="message" id="message">游戏准备开始！请点击"开始游戏"按钮。</div>
+        
+        <div class="selection-area">
+            <div class="selected-card hidden-selected" id="redSelectedCard"></div>
+            <div>VS</div>
+            <div class="selected-card hidden-selected" id="blueSelectedCard"></div>
+        </div>
+        
+        <div class="battlefield">
+            <div class="battle-line"></div>
+            <div class="stronghold neutral" id="strongholdA">A</div>
+            <div class="stronghold neutral" id="strongholdB">B</div>
+            <div class="stronghold neutral" id="strongholdC">C</div>
+            <div class="stronghold neutral" id="strongholdD">D</div>
+            <div class="stronghold neutral" id="strongholdE">E</div>
+        </div>
+        
+        <div class="cards-container">
+            <div class="cards red-cards" id="redCards">
+                <!-- 红队卡牌将由JavaScript生成 -->
+            </div>
+            
+            <div class="cards blue-cards" id="blueCards">
+                <!-- 蓝队卡牌将由JavaScript生成 -->
+            </div>
+        </div>
+        
+        <div class="confirm-buttons">
+            <button id="redConfirmBtn" class="confirm-btn" disabled>红队确认</button>
+            <button id="blueConfirmBtn" class="confirm-btn" disabled>蓝队确认</button>
+        </div>
+        
+        <div class="controls">
+            <button id="startBtn">开始游戏</button>
+            <button id="nextRoundBtn" disabled>下一回合</button>
+            <button id="resetBtn">重置游戏</button>
+        </div>
+        
+        <div class="instructions">
+            <h3>游戏规则</h3>
+            <p>1. 红队和蓝队各有1-10的数字卡牌各一张</p>
+            <p>2. 每回合争夺一个据点，两队各出一张牌</p>
+            <p>3. 数字大的一方占领该据点，数字相同则据点作废</p>
+            <p>4. 每张卡牌只能使用一次，请谨慎选择</p>
+            <p>5. 占领据点多的一方获胜</p>
+            <p><strong>新增：</strong>选择卡牌后，该队伍的所有卡牌都会翻转到背面，进一步增强隐秘性</p>
+            <p><strong>新增：</strong>确认选择后不会显示具体卡牌，直到双方都确认后才会揭示</p>
+        </div>
+    </div>
+
+    <script>
+        // 游戏状态
+        const gameState = {
+            redCards: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+            blueCards: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+            redUsed: [],
+            blueUsed: [],
+            strongholds: {
+                A: { owner: null, value: null },
+                B: { owner: null, value: null },
+                C: { owner: null, value: null },
+                D: { owner: null, value: null },
+                E: { owner: null, value: null }
+            },
+            currentStronghold: 'A',
+            redScore: 0,
+            blueScore: 0,
+            gameStarted: false,
+            currentRound: 0,
+            maxRounds: 5,
+            redSelectedCard: null,
+            blueSelectedCard: null,
+            redConfirmed: false,
+            blueConfirmed: false
+        };
+
+        // DOM元素
+        let redCardsContainer = document.getElementById('redCards');
+        let blueCardsContainer = document.getElementById('blueCards');
+        const redScoreElement = document.getElementById('redScore');
+        const blueScoreElement = document.getElementById('blueScore');
+        const redUsedElement = document.getElementById('redUsed');
+        const blueUsedElement = document.getElementById('blueUsed');
+        const messageElement = document.getElementById('message');
+        const roundInfoElement = document.getElementById('roundInfo');
+        const startBtn = document.getElementById('startBtn');
+        const nextRoundBtn = document.getElementById('nextRoundBtn');
+        const resetBtn = document.getElementById('resetBtn');
+        const redConfirmBtn = document.getElementById('redConfirmBtn');
+        const blueConfirmBtn = document.getElementById('blueConfirmBtn');
+        let redSelectedCardElement = document.getElementById('redSelectedCard');
+        let blueSelectedCardElement = document.getElementById('blueSelectedCard');
+
+        // 初始化卡牌
+        function initializeCards() {
+            redCardsContainer.innerHTML = '';
+            blueCardsContainer.innerHTML = '';
+            
+            gameState.redCards.forEach(card => {
+                const cardElement = createCardElement('red', card);
+                redCardsContainer.appendChild(cardElement);
+            });
+            
+            gameState.blueCards.forEach(card => {
+                const cardElement = createCardElement('blue', card);
+                blueCardsContainer.appendChild(cardElement);
+            });
+        }
+
+        // 创建卡牌元素
+        function createCardElement(team, value) {
+            const cardElement = document.createElement('div');
+            cardElement.className = `card ${team}-card`;
+            cardElement.innerHTML = `
+                <div class="card-face card-front">${value}</div>
+                <div class="card-face card-back"></div>
+            `;
+            cardElement.dataset.value = value;
+            cardElement.addEventListener('click', () => selectCard(team, value));
+            return cardElement;
+        }
+
+        // 选择卡牌
+        function selectCard(team, value) {
+            if (!gameState.gameStarted) {
+                messageElement.textContent = '请先开始游戏！';
+                return;
+            }
+            
+            if (team === 'red') {
+                if (gameState.redUsed.includes(value)) {
+                    messageElement.textContent = '红队：这张牌已经使用过了！';
+                    return;
+                }
+                if (gameState.redConfirmed) {
+                    messageElement.textContent = '红队：你已经确认了选择！';
+                    return;
+                }
+                
+                // 设置新选择的卡牌
+                gameState.redSelectedCard = value;
+                
+                // 启用确认按钮
+                redConfirmBtn.disabled = false;
+                messageElement.textContent = `红队已选择卡牌，请确认选择`;
+                
+                // 将红队所有卡牌翻转到背面
+                flipAllCards('red');
+            } else {
+                if (gameState.blueUsed.includes(value)) {
+                    messageElement.textContent = '蓝队：这张牌已经使用过了！';
+                    return;
+                }
+                if (gameState.blueConfirmed) {
+                    messageElement.textContent = '蓝队：你已经确认了选择！';
+                    return;
+                }
+                
+                // 设置新选择的卡牌
+                gameState.blueSelectedCard = value;
+                
+                // 启用确认按钮
+                blueConfirmBtn.disabled = false;
+                messageElement.textContent = `蓝队已选择卡牌，请确认选择`;
+                
+                // 将蓝队所有卡牌翻转到背面
+                flipAllCards('blue');
+            }
+        }
+
+        // 将所有卡牌翻转到背面
+        function flipAllCards(team) {
+            const cardElements = document.querySelectorAll(`.${team}-card`);
+            cardElements.forEach(card => {
+                card.classList.add('hidden');
+            });
+        }
+
+        // 检查双方是否都确认了选择
+        function checkBothConfirmed() {
+            if (gameState.redConfirmed && gameState.blueConfirmed) {
+                // 双方都确认了，揭示结果
+                setTimeout(revealCards, 1000);
+            }
+        }
+
+        // 揭示卡牌
+        function revealCards() {
+            // 创建新的揭示元素
+            const redRevealedElement = document.createElement('div');
+            redRevealedElement.className = 'revealed-card red-revealed';
+            redRevealedElement.textContent = gameState.redSelectedCard;
+            
+            const blueRevealedElement = document.createElement('div');
+            blueRevealedElement.className = 'revealed-card blue-revealed';
+            blueRevealedElement.textContent = gameState.blueSelectedCard;
+            
+            // 替换选择区域的内容
+            redSelectedCardElement.replaceWith(redRevealedElement);
+            blueSelectedCardElement.replaceWith(blueRevealedElement);
+            
+            // 解决当前回合
+            setTimeout(() => {
+                resolveRound(redRevealedElement, blueRevealedElement);
+            }, 1500);
+        }
+
+        // 解决当前回合
+        function resolveRound(redRevealedElement, blueRevealedElement) {
+            const redCard = gameState.redSelectedCard;
+            const blueCard = gameState.blueSelectedCard;
+            const stronghold = gameState.currentStronghold;
+            
+            // 标记已使用的卡牌
+            gameState.redUsed.push(redCard);
+            gameState.blueUsed.push(blueCard);
+            
+            // 更新卡牌显示
+            updateCardDisplay();
+            
+            // 比较卡牌大小
+            if (redCard > blueCard) {
+                // 红队获胜
+                gameState.strongholds[stronghold].owner = 'red';
+                gameState.strongholds[stronghold].value = `${redCard} > ${blueCard}`;
+                gameState.redScore++;
+                messageElement.textContent = `红队获胜！${redCard} > ${blueCard}，占领据点 ${stronghold}`;
+                document.getElementById(`stronghold${stronghold}`).className = 'stronghold red';
+            } else if (blueCard > redCard) {
+                // 蓝队获胜
+                gameState.strongholds[stronghold].owner = 'blue';
+                gameState.strongholds[stronghold].value = `${redCard} < ${blueCard}`;
+                gameState.blueScore++;
+                messageElement.textContent = `蓝队获胜！${redCard} < ${blueCard}，占领据点 ${stronghold}`;
+                document.getElementById(`stronghold${stronghold}`).className = 'stronghold blue';
+            } else {
+                // 平局
+                gameState.strongholds[stronghold].owner = 'neutral';
+                gameState.strongholds[stronghold].value = `${redCard} = ${blueCard}`;
+                messageElement.textContent = `平局！${redCard} = ${blueCard}，据点 ${stronghold} 作废`;
+                document.getElementById(`stronghold${stronghold}`).className = 'stronghold neutral';
+            }
+            
+            // 更新分数显示
+            redScoreElement.textContent = gameState.redScore;
+            blueScoreElement.textContent = gameState.blueScore;
+            redUsedElement.textContent = gameState.redUsed.length;
+            blueUsedElement.textContent = gameState.blueUsed.length;
+            
+            // 重置选择状态
+            gameState.redSelectedCard = null;
+            gameState.blueSelectedCard = null;
+            gameState.redConfirmed = false;
+            gameState.blueConfirmed = false;
+            
+            // 重新创建隐藏的选择区域
+            const newRedSelectedCard = document.createElement('div');
+            newRedSelectedCard.className = 'selected-card hidden-selected';
+            newRedSelectedCard.id = 'redSelectedCard';
+            
+            const newBlueSelectedCard = document.createElement('div');
+            newBlueSelectedCard.className = 'selected-card hidden-selected';
+            newBlueSelectedCard.id = 'blueSelectedCard';
+            
+            // 替换揭示元素
+            redRevealedElement.replaceWith(newRedSelectedCard);
+            blueRevealedElement.replaceWith(newBlueSelectedCard);
+            
+            // 更新DOM引用
+            redSelectedCardElement = newRedSelectedCard;
+            blueSelectedCardElement = newBlueSelectedCard;
+            
+            // 更新回合
+            gameState.currentRound++;
+            
+            // 检查游戏是否结束
+            if (gameState.currentRound >= gameState.maxRounds) {
+                endGame();
+            } else {
+                // 准备下一回合
+                prepareNextRound();
+            }
+        }
+
+        // 准备下一回合
+        function prepareNextRound() {
+            const strongholds = ['A', 'B', 'C', 'D', 'E'];
+            gameState.currentStronghold = strongholds[gameState.currentRound];
+            roundInfoElement.textContent = `准备争夺据点 ${gameState.currentStronghold}`;
+            nextRoundBtn.disabled = false;
+            
+            // 重置确认按钮
+            redConfirmBtn.disabled = true;
+            blueConfirmBtn.disabled = true;
+            
+            // 重置卡牌显示
+            resetCardDisplay();
+            
+            messageElement.textContent = `请两队为据点 ${gameState.currentStronghold} 选择卡牌。`;
+        }
+
+        // 更新卡牌显示
+        function updateCardDisplay() {
+            const redCardElements = document.querySelectorAll('#redCards .card');
+            const blueCardElements = document.querySelectorAll('#blueCards .card');
+            
+            redCardElements.forEach(card => {
+                const value = parseInt(card.dataset.value);
+                if (gameState.redUsed.includes(value)) {
+                    card.classList.add('used');
+                    card.classList.add('hidden');
+                }
+            });
+            
+            blueCardElements.forEach(card => {
+                const value = parseInt(card.dataset.value);
+                if (gameState.blueUsed.includes(value)) {
+                    card.classList.add('used');
+                    card.classList.add('hidden');
+                }
+            });
+        }
+
+        // 重置卡牌显示（新回合开始时）
+        function resetCardDisplay() {
+            const redCardElements = document.querySelectorAll('#redCards .card');
+            const blueCardElements = document.querySelectorAll('#blueCards .card');
+            
+            redCardElements.forEach(card => {
+                if (!card.classList.contains('used')) {
+                    card.classList.remove('hidden');
+                }
+            });
+            
+            blueCardElements.forEach(card => {
+                if (!card.classList.contains('used')) {
+                    card.classList.remove('hidden');
+                }
+            });
+        }
+
+        // 开始游戏
+        function startGame() {
+            gameState.gameStarted = true;
+            startBtn.disabled = true;
+            messageElement.textContent = '游戏开始！请两队为据点 A 选择卡牌。';
+            roundInfoElement.textContent = '正在争夺据点 A';
+        }
+
+        // 下一回合
+        function nextRound() {
+            nextRoundBtn.disabled = true;
+            messageElement.textContent = `请两队为据点 ${gameState.currentStronghold} 选择卡牌。`;
+        }
+
+        // 结束游戏
+        function endGame() {
+            gameState.gameStarted = false;
+            
+            let winnerMessage = '';
+            if (gameState.redScore > gameState.blueScore) {
+                winnerMessage = `游戏结束！红队以 ${gameState.redScore}:${gameState.blueScore} 获胜！`;
+            } else if (gameState.blueScore > gameState.redScore) {
+                winnerMessage = `游戏结束！蓝队以 ${gameState.blueScore}:${gameState.redScore} 获胜！`;
+            } else {
+                winnerMessage = `游戏结束！平局 ${gameState.redScore}:${gameState.blueScore}`;
+            }
+            
+            messageElement.textContent = winnerMessage;
+            roundInfoElement.textContent = '游戏结束';
+            nextRoundBtn.disabled = true;
+            redConfirmBtn.disabled = true;
+            blueConfirmBtn.disabled = true;
+        }
+
+        // 重置游戏
+        function resetGame() {
+            // 重置游戏状态
+            gameState.redCards = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+            gameState.blueCards = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+            gameState.redUsed = [];
+            gameState.blueUsed = [];
+            gameState.strongholds = {
+                A: { owner: null, value: null },
+                B: { owner: null, value: null },
+                C: { owner: null, value: null },
+                D: { owner: null, value: null },
+                E: { owner: null, value: null }
+            };
+            gameState.currentStronghold = 'A';
+            gameState.redScore = 0;
+            gameState.blueScore = 0;
+            gameState.gameStarted = false;
+            gameState.currentRound = 0;
+            gameState.redSelectedCard = null;
+            gameState.blueSelectedCard = null;
+            gameState.redConfirmed = false;
+            gameState.blueConfirmed = false;
+            
+            // 重置UI
+            redScoreElement.textContent = '0';
+            blueScoreElement.textContent = '0';
+            redUsedElement.textContent = '0';
+            blueUsedElement.textContent = '0';
+            messageElement.textContent = '游戏已重置！';
+            roundInfoElement.textContent = '准备争夺据点 A';
+            startBtn.disabled = false;
+            nextRoundBtn.disabled = true;
+            redConfirmBtn.disabled = true;
+            blueConfirmBtn.disabled = true;
+            
+            // 重置选择区域
+            if (redSelectedCardElement && blueSelectedCardElement) {
+                redSelectedCardElement.className = 'selected-card hidden-selected';
+                blueSelectedCardElement.className = 'selected-card hidden-selected';
+            }
+            
+            // 重置据点显示
+            const strongholds = ['A', 'B', 'C', 'D', 'E'];
+            strongholds.forEach(stronghold => {
+                document.getElementById(`stronghold${stronghold}`).className = 'stronghold neutral';
+            });
+            
+            // 重新初始化卡牌
+            initializeCards();
+        }
+
+        // 确认选择
+        function confirmSelection(team) {
+            if (team === 'red') {
+                gameState.redConfirmed = true;
+                redConfirmBtn.disabled = true;
+                messageElement.textContent = '红队已确认选择，等待蓝队确认...';
+            } else {
+                gameState.blueConfirmed = true;
+                blueConfirmBtn.disabled = true;
+                messageElement.textContent = '蓝队已确认选择，等待红队确认...';
+            }
+            
+            // 检查是否两队都确认了选择
+            checkBothConfirmed();
+        }
+
+        // 事件监听
+        startBtn.addEventListener('click', startGame);
+        nextRoundBtn.addEventListener('click', nextRound);
+        resetBtn.addEventListener('click', resetGame);
+        redConfirmBtn.addEventListener('click', () => confirmSelection('red'));
+        blueConfirmBtn.addEventListener('click', () => confirmSelection('blue'));
+
+        // 初始化游戏
+        initializeCards();
+    </script>
+</body>
+</html>

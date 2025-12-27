@@ -1,0 +1,14 @@
+[
+  { "id": "价格预测与风险管理", "title": "价格预测与风险管理", "src": "game/价格预测与风险管理.html", "description": "" },
+  { "id": "农场", "title": "农场", "src": "game/农场.html", "description": "" },
+  { "id": "商店小老板", "title": "商店小老板", "src": "game/商店小老板.html", "description": "" },
+  { "id": "城市交通网优化", "title": "城市交通网优化", "src": "game/城市交通网优化.html", "description": "" },
+  { "id": "宝石迷宫-期望值", "title": "宝石迷宫 - 期望值", "src": "game/宝石迷宫-期望值.html", "description": "" },
+  { "id": "对对碰", "title": "对对碰", "src": "game/对对碰.html", "description": "" },
+  { "id": "抽奖", "title": "抽奖", "src": "game/抽奖.html", "description": "" },
+  { "id": "拍卖", "title": "拍卖", "src": "game/拍卖.html", "description": "" },
+  { "id": "数字侦探（逻辑）", "title": "数字侦探（逻辑）", "src": "game/数字侦探（逻辑）.html", "description": "" },
+  { "id": "数字对战", "title": "数字对战", "src": "game/数字对战.html", "description": "" },
+  { "id": "财富大亨", "title": "财富大亨", "src": "game/财富大亨.html", "description": "" },
+  { "id": "迷宫", "title": "迷宫", "src": "game/迷宫.html", "description": "" }
+]

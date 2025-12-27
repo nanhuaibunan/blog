@@ -1,0 +1,1253 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>苹果王国拍卖会</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    
+    <!-- 配置Tailwind自定义颜色和字体 -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#FF6B6B',
+                        secondary: '#4ECDC4',
+                        accent: '#FFD166',
+                        appleRed: '#E74C3C',
+                        appleGreen: '#2ECC71',
+                        starYellow: '#F1C40F',
+                        background: '#F7FFF7'
+                    },
+                    fontFamily: {
+                        comic: ['Comic Sans MS', 'cursive', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .text-shadow {
+                text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+            }
+            .animate-bounce-slow {
+                animation: bounce 2s infinite;
+            }
+            .animate-pulse-slow {
+                animation: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+            }
+            .table-hover tr:hover {
+                background-color: rgba(255, 209, 102, 0.1);
+            }
+        }
+    </style>
+</head>
+<body class="bg-background min-h-screen font-comic text-gray-800">
+    <!-- 页面标题 -->
+    <header class="bg-gradient-to-r from-appleRed to-primary text-white py-6 px-4 shadow-lg">
+        <div class="container mx-auto text-center">
+            <h1 class="text-[clamp(2rem,5vw,3.5rem)] font-bold text-shadow">苹果王国拍卖会</h1>
+            <p class="text-lg mt-2">学习资源管理与理性规划</p>
+        </div>
+    </header>
+
+    <main class="container mx-auto px-4 py-8">
+        <!-- 游戏状态显示 -->
+        <div class="bg-white rounded-xl shadow-md p-6 mb-8">
+            <div class="flex flex-wrap justify-between items-center gap-4">
+                <div class="flex items-center">
+                    <div class="bg-appleRed text-white p-3 rounded-full mr-3">
+                        <i class="fa fa-apple text-2xl"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-xl font-bold">当前拍卖: <span id="currentApple" class="text-appleRed">第1个苹果</span></h2>
+                        <p>剩余苹果: <span id="remainingApples" class="font-bold">7个</span></p>
+                    </div>
+                </div>
+                
+                <div class="flex items-center">
+                    <div class="bg-starYellow text-white p-3 rounded-full mr-3">
+                        <i class="fa fa-star text-2xl"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-xl font-bold">游戏阶段: <span id="gamePhase" class="text-primary">准备阶段</span></h2>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <!-- 左侧：教师控制面板 -->
+            <div class="lg:col-span-1 space-y-6">
+                <!-- 苹果设置面板 -->
+                <div class="bg-white rounded-xl shadow-md p-6">
+                    <h3 class="text-xl font-bold mb-4 text-primary flex items-center">
+                        <i class="fa fa-cog mr-2"></i> 教师控制面板
+                    </h3>
+                    
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block mb-2 font-bold">苹果类型</label>
+                            <div class="flex gap-4">
+                                <label class="flex items-center">
+                                    <input type="radio" name="appleType" value="normal" checked class="mr-2">
+                                    <span>普通苹果</span>
+                                </label>
+                                <label class="flex items-center">
+                                    <input type="radio" name="appleType" value="mystery" class="mr-2">
+                                    <span>神秘苹果</span>
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div id="normalAppleValueDisplay" class="p-3 bg-gray-100 rounded-lg">
+                            <p class="font-bold">普通苹果价值: <span id="currentNormalValue">5 星</span></p>
+                            <button id="regenerateNormalValueBtn" class="mt-2 text-sm bg-primary/20 hover:bg-primary/30 text-primary py-1 px-2 rounded">
+                                重新生成价值
+                            </button>
+                        </div>
+                        
+                        <div id="mysteryAppleInfo" class="hidden p-3 bg-gray-100 rounded-lg">
+                            <p class="font-bold">神秘苹果价值: 随机为 2 星或 20 星</p>
+                        </div>
+                        
+                        <button id="startAuctionBtn" class="w-full bg-primary hover:bg-primary/90 text-white py-3 px-4 rounded-lg transition-all duration-300 font-bold text-lg">
+                            开始拍卖
+                        </button>
+                        
+                        <button id="endAuctionBtn" class="w-full bg-gray-600 hover:bg-gray-700 text-white py-3 px-4 rounded-lg transition-all duration-300 font-bold text-lg hidden">
+                            结束当前拍卖
+                        </button>
+                        
+                        <button id="nextAppleBtn" class="w-full bg-secondary hover:bg-secondary/90 text-white py-3 px-4 rounded-lg transition-all duration-300 font-bold text-lg hidden">
+                            下一个苹果
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- 特殊道具和任务面板 -->
+                <div class="bg-white rounded-xl shadow-md p-6">
+                    <h3 class="text-xl font-bold mb-4 text-accent flex items-center">
+                        <i class="fa fa-magic mr-2"></i> 特殊道具与任务
+                    </h3>
+                    
+                    <div class="space-y-4">
+                        <!-- 放大镜道具 -->
+                        <div>
+                            <label class="block mb-2 font-bold">使用放大镜 (消耗1星星)</label>
+                            <div class="flex gap-2">
+                                <select id="magnifyingStudentSelector" class="flex-1 p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary">
+                                    <option value="">选择学生 (留空表示无人使用)</option>
+                                    <!-- 学生选项将通过JS动态添加 -->
+                                </select>
+                                <button id="useMagnifyingGlassBtn" class="bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded-lg transition-all duration-300">
+                                    <i class="fa fa-search mr-1"></i> 使用
+                                </button>
+                            </div>
+                            <p class="text-xs text-gray-500 mt-1">允许多个学生在同一轮使用</p>
+                            
+                            <!-- 放大镜结果控制按钮 -->
+                            <div class="flex gap-2 mt-2">
+                                <button id="showMagnifyingResultBtn" class="flex-1 bg-blue-100 hover:bg-blue-200 text-blue-800 py-2 px-4 rounded-lg transition-all duration-300 text-sm hidden">
+                                    <i class="fa fa-eye mr-1"></i> 显示结果
+                                </button>
+                                <button id="hideMagnifyingResultBtn" class="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-800 py-2 px-4 rounded-lg transition-all duration-300 text-sm hidden">
+                                    <i class="fa fa-eye-slash mr-1"></i> 隐藏结果
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <!-- 储蓄罐道具 -->
+                        <div>
+                            <label class="block mb-2 font-bold">应用储蓄罐效果 (消耗1星星)</label>
+                            <div class="flex gap-2">
+                                <select id="piggyBankStudentSelector" class="flex-1 p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary">
+                                    <option value="">选择学生 (留空表示无人使用)</option>
+                                    <!-- 学生选项将通过JS动态添加 -->
+                                </select>
+                                <button id="applyPiggyBankBtn" class="bg-green-500 hover:bg-green-600 text-white py-2 px-4 rounded-lg transition-all duration-300">
+                                    <i class="fa fa-piggy-bank mr-1"></i> 应用
+                                </button>
+                            </div>
+                            <p class="text-xs text-gray-500 mt-1">仅可在拍卖结束到下一轮拍卖期间使用，使用将消耗1星星</p>
+                        </div>
+                        
+                        <div class="border-t border-gray-200 pt-4">
+                            <h4 class="font-bold mb-2">小任务</h4>
+                            <textarea id="miniTask" class="w-full p-2 border border-gray-300 rounded-lg h-24" placeholder="输入当前小任务..."></textarea>
+                            <div class="flex gap-2 mt-2">
+                                <button id="assignTaskBtn" class="flex-1 bg-accent hover:bg-accent/90 text-gray-800 py-2 px-4 rounded-lg transition-all duration-300 font-bold">
+                                    发布任务
+                                </button>
+                                <button id="endTaskBtn" class="flex-1 bg-secondary hover:bg-secondary/90 text-white py-2 px-4 rounded-lg transition-all duration-300 font-bold hidden">
+                                    结束任务
+                                </button>
+                            </div>
+                            
+                            <!-- 任务参与者选择 (默认隐藏) -->
+                            <div id="taskParticipantsContainer" class="mt-4 hidden">
+                                <label class="block mb-2 font-bold">选择完成任务的学生:</label>
+                                <div id="taskParticipants" class="border border-gray-200 rounded-lg p-3 max-h-40 overflow-y-auto space-y-2">
+                                    <!-- 学生复选框将通过JS动态添加 -->
+                                    <label class="flex items-center">
+                                        <input type="checkbox" value="none" class="mr-2 task-participant-checkbox">
+                                        <span class="text-gray-600">无人完成任务</span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 中间：拍卖区 -->
+            <div class="lg:col-span-1 space-y-6">
+                <!-- 当前拍卖苹果展示 -->
+                <div class="bg-white rounded-xl shadow-md p-6 text-center">
+                    <div id="appleDisplay" class="relative mx-auto w-48 h-48 mb-4">
+                        <img src="https://picsum.photos/seed/apple1/200/200" alt="苹果图片" class="w-full h-full object-contain">
+                        <div id="appleValueDisplay" class="hidden absolute -bottom-4 left-1/2 transform -translate-x-1/2 bg-starYellow text-white px-3 py-1 rounded-full font-bold">
+                            价值: 5 星
+                        </div>
+                        <div id="mysteryOverlay" class="absolute inset-0 bg-gray-800/70 rounded-full flex items-center justify-center">
+                            <i class="fa fa-question text-white text-5xl"></i>
+                        </div>
+                    </div>
+                    
+                    <h3 class="text-2xl font-bold mb-2">当前竞价</h3>
+                    <div id="highestBid" class="text-3xl font-bold text-appleRed mb-4">0 星星币</div>
+                    
+                    <div id="bidHistory" class="border-t border-gray-200 mt-4 pt-4 max-h-40 overflow-y-auto">
+                        <p class="text-gray-500">竞价记录将显示在这里...</p>
+                    </div>
+                </div>
+                
+                <!-- 学生竞价输入 -->
+                <div class="bg-white rounded-xl shadow-md p-6">
+                    <h3 class="text-xl font-bold mb-4 text-primary">学生竞价</h3>
+                    
+                    <div class="space-y-3">
+                        <div class="flex gap-3">
+                            <select id="studentSelector" class="flex-1 p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary">
+                                <option value="">选择学生</option>
+                                <!-- 学生选项将通过JS动态添加 -->
+                            </select>
+                            <input type="number" id="bidAmount" min="1" value="1" 
+                                   class="w-24 p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary">
+                            <button id="placeBidBtn" class="bg-appleRed hover:bg-appleRed/90 text-white py-2 px-4 rounded-lg transition-all duration-300">
+                                出价
+                            </button>
+                        </div>
+                        
+                        <div id="bidMessage" class="text-center py-2 hidden"></div>
+                    </div>
+                </div>
+                
+                <!-- 放大镜结果 -->
+                <div id="magnifyingResult" class="bg-white rounded-xl shadow-md p-6 text-center">
+                    <div class="bg-blue-100 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-3">
+                        <i class="fa fa-search text-blue-500 text-2xl"></i>
+                    </div>
+                    <h3 class="text-xl font-bold mb-2">放大镜结果</h3>
+                    <p id="magnifyingValue" class="text-lg">这个苹果的实际价值是: <span class="font-bold text-primary">?</span> 星</p>
+                    <p class="text-sm text-gray-500 mt-2">所有使用放大镜的学生都能看到此结果</p>
+                </div>
+            </div>
+            
+            <!-- 右侧：学生信息 -->
+            <div class="lg:col-span-1">
+                <div class="bg-white rounded-xl shadow-md p-6 mb-6">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-xl font-bold text-primary flex items-center">
+                            <i class="fa fa-users mr-2"></i> 参与学生
+                        </h3>
+                        <div class="flex gap-2">
+                            <input type="text" id="newStudentName" placeholder="学生姓名" 
+                                   class="p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary">
+                            <button id="addStudentBtn" class="bg-secondary hover:bg-secondary/90 text-white py-2 px-4 rounded-lg transition-all duration-300">
+                                添加
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div id="studentsList" class="space-y-3 max-h-[calc(100vh-500px)] overflow-y-auto pr-2">
+                        <!-- 学生列表将通过JS动态添加 -->
+                        <div class="text-gray-500 text-center py-8">
+                            <p>请添加参与的学生...</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 游戏结果 -->
+                <div class="bg-white rounded-xl shadow-md p-6">
+                    <h3 class="text-xl font-bold mb-4 text-accent flex items-center">
+                        <i class="fa fa-trophy mr-2"></i> 游戏结果
+                    </h3>
+                    
+                    <button id="showResultsBtn" class="w-full bg-accent hover:bg-accent/90 text-gray-800 py-3 px-4 rounded-lg transition-all duration-300 font-bold mb-4">
+                        显示结果
+                    </button>
+                    
+                    <div id="resultsContainer" class="hidden space-y-6 max-h-[calc(100vh-300px)] overflow-y-auto">
+                        <!-- 每轮拍卖结果表格 -->
+                        <div>
+                            <h4 class="font-bold text-center border-b pb-2 mb-3">每轮拍卖详情</h4>
+                            <div class="overflow-x-auto">
+                                <table class="min-w-full border border-gray-200 rounded-lg table-hover">
+                                    <thead>
+                                        <tr class="bg-gray-50">
+                                            <th class="py-2 px-3 border-b text-left">轮次</th>
+                                            <th class="py-2 px-3 border-b text-left">苹果类型</th>
+                                            <th class="py-2 px-3 border-b text-left">实际价值</th>
+                                            <th class="py-2 px-3 border-b text-left">中标者</th>
+                                            <th class="py-2 px-3 border-b text-left">中标价格</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="auctionHistoryTable">
+                                        <!-- 拍卖历史表格内容将通过JS动态添加 -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        
+                        <!-- 最终资产统计 -->
+                        <div>
+                            <h4 class="font-bold text-center border-b pb-2">最终资产统计</h4>
+                            <div id="resultsList">
+                                <!-- 结果将通过JS动态添加 -->
+                            </div>
+                        </div>
+                        
+                        <div id="surpriseStickers" class="mt-4 p-3 bg-yellow-100 rounded-lg hidden">
+                            <h5 class="font-bold text-center mb-2">获得惊喜贴纸的小朋友</h5>
+                            <div id="stickerWinners"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="bg-gray-800 text-white py-6 mt-12">
+        <div class="container mx-auto px-4 text-center">
+            <p>苹果王国拍卖会 &copy; 2023 课堂教学游戏</p>
+            <p class="text-sm mt-2 text-gray-400">设计目的：帮助小朋友理解资源有限性，学习长期规划</p>
+        </div>
+    </footer>
+
+    <script>
+        // 游戏状态数据
+        const gameState = {
+            currentApple: 1,
+            totalApples: 8,
+            phase: 'preparation', // preparation, auction, auctionEnded, task, finished
+            appleType: 'normal',
+            appleValue: 5, // 普通苹果价值
+            mysteryAppleRealValue: 2, // 神秘苹果实际价值，2或20
+            highestBid: 0,
+            highestBidder: null,
+            bidHistory: [],
+            students: [],
+            currentTask: '',
+            taskShown: false, // 新增：标记小任务是否已显示过
+            // 记录每轮拍卖的详细情况
+            auctionHistory: [],
+            // 记录已使用放大镜的学生ID，允许多个
+            studentsUsedMagnifying: [],
+            // 记录已使用储蓄罐的学生ID，防止重复使用
+            studentsUsedPiggyBank: [],
+            // 放大镜结果显示状态
+            magnifyingResultVisible: false
+        };
+
+        // DOM 元素
+        const elements = {
+            currentApple: document.getElementById('currentApple'),
+            remainingApples: document.getElementById('remainingApples'),
+            gamePhase: document.getElementById('gamePhase'),
+            appleTypeRadios: document.querySelectorAll('input[name="appleType"]'),
+            normalAppleValueDisplay: document.getElementById('normalAppleValueDisplay'),
+            currentNormalValue: document.getElementById('currentNormalValue'),
+            regenerateNormalValueBtn: document.getElementById('regenerateNormalValueBtn'),
+            mysteryAppleInfo: document.getElementById('mysteryAppleInfo'),
+            mysteryOverlay: document.getElementById('mysteryOverlay'),
+            appleValueDisplay: document.getElementById('appleValueDisplay'),
+            startAuctionBtn: document.getElementById('startAuctionBtn'),
+            endAuctionBtn: document.getElementById('endAuctionBtn'),
+            nextAppleBtn: document.getElementById('nextAppleBtn'),
+            highestBid: document.getElementById('highestBid'),
+            bidHistory: document.getElementById('bidHistory'),
+            studentSelector: document.getElementById('studentSelector'),
+            bidAmount: document.getElementById('bidAmount'),
+            placeBidBtn: document.getElementById('placeBidBtn'),
+            bidMessage: document.getElementById('bidMessage'),
+            newStudentName: document.getElementById('newStudentName'),
+            addStudentBtn: document.getElementById('addStudentBtn'),
+            studentsList: document.getElementById('studentsList'),
+            magnifyingStudentSelector: document.getElementById('magnifyingStudentSelector'),
+            useMagnifyingGlassBtn: document.getElementById('useMagnifyingGlassBtn'),
+            showMagnifyingResultBtn: document.getElementById('showMagnifyingResultBtn'),
+            hideMagnifyingResultBtn: document.getElementById('hideMagnifyingResultBtn'),
+            piggyBankStudentSelector: document.getElementById('piggyBankStudentSelector'),
+            applyPiggyBankBtn: document.getElementById('applyPiggyBankBtn'),
+            miniTask: document.getElementById('miniTask'),
+            assignTaskBtn: document.getElementById('assignTaskBtn'),
+            endTaskBtn: document.getElementById('endTaskBtn'),
+            taskParticipantsContainer: document.getElementById('taskParticipantsContainer'),
+            taskParticipants: document.getElementById('taskParticipants'),
+            magnifyingResult: document.getElementById('magnifyingResult'),
+            magnifyingValue: document.getElementById('magnifyingValue'),
+            showResultsBtn: document.getElementById('showResultsBtn'),
+            resultsContainer: document.getElementById('resultsContainer'),
+            resultsList: document.getElementById('resultsList'),
+            auctionHistoryTable: document.getElementById('auctionHistoryTable'),
+            surpriseStickers: document.getElementById('surpriseStickers'),
+            stickerWinners: document.getElementById('stickerWinners')
+        };
+
+        // 生成随机数的辅助函数
+        function getRandomInt(min, max) {
+            return Math.floor(Math.random() * (max - min + 1)) + min;
+        }
+
+        // 生成普通苹果的随机价值 (1-8)
+        function generateNormalAppleValue() {
+            const value = getRandomInt(1, 8);
+            gameState.appleValue = value;
+            elements.currentNormalValue.textContent = `${value} 星`;
+            return value;
+        }
+
+        // 生成神秘苹果的随机价值 (2或20)
+        function generateMysteryAppleValue() {
+            const value = Math.random() > 0.5 ? 20 : 2;
+            gameState.mysteryAppleRealValue = value;
+            return value;
+        }
+
+        // 初始化事件监听
+        function initEventListeners() {
+            // 苹果类型切换
+            elements.appleTypeRadios.forEach(radio => {
+                radio.addEventListener('change', (e) => {
+                    gameState.appleType = e.target.value;
+                    if (gameState.appleType === 'mystery') {
+                        elements.normalAppleValueDisplay.classList.add('hidden');
+                        elements.mysteryAppleInfo.classList.remove('hidden');
+                        elements.mysteryOverlay.classList.remove('hidden');
+                        elements.appleValueDisplay.classList.add('hidden');
+                        // 生成神秘苹果价值
+                        generateMysteryAppleValue();
+                    } else {
+                        elements.normalAppleValueDisplay.classList.remove('hidden');
+                        elements.mysteryAppleInfo.classList.add('hidden');
+                        elements.mysteryOverlay.classList.add('hidden');
+                        elements.appleValueDisplay.classList.remove('hidden');
+                        // 生成普通苹果价值
+                        generateNormalAppleValue();
+                        elements.appleValueDisplay.textContent = `价值: ${gameState.appleValue} 星`;
+                    }
+                });
+            });
+
+            // 重新生成普通苹果价值
+            elements.regenerateNormalValueBtn.addEventListener('click', () => {
+                generateNormalAppleValue();
+                if (gameState.phase === 'preparation') {
+                    elements.appleValueDisplay.textContent = `价值: ${gameState.appleValue} 星`;
+                }
+                showMessage('已重新生成普通苹果价值', 'blue');
+            });
+
+            // 开始拍卖
+            elements.startAuctionBtn.addEventListener('click', startAuction);
+
+            // 结束当前拍卖
+            elements.endAuctionBtn.addEventListener('click', endAuction);
+
+            // 下一个苹果
+            elements.nextAppleBtn.addEventListener('click', nextApple);
+
+            // 出价
+            elements.placeBidBtn.addEventListener('click', placeBid);
+
+            // 添加学生
+            elements.addStudentBtn.addEventListener('click', addStudent);
+            elements.newStudentName.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') addStudent();
+            });
+
+            // 使用放大镜
+            elements.useMagnifyingGlassBtn.addEventListener('click', useMagnifyingGlass);
+            
+            // 显示放大镜结果
+            elements.showMagnifyingResultBtn.addEventListener('click', () => {
+                elements.magnifyingResult.classList.remove('hidden');
+                elements.showMagnifyingResultBtn.classList.add('hidden');
+                elements.hideMagnifyingResultBtn.classList.remove('hidden');
+                gameState.magnifyingResultVisible = true;
+                showMessage('已显示放大镜结果', 'blue');
+            });
+            
+            // 隐藏放大镜结果
+            elements.hideMagnifyingResultBtn.addEventListener('click', () => {
+                elements.magnifyingResult.classList.add('hidden');
+                elements.hideMagnifyingResultBtn.classList.add('hidden');
+                elements.showMagnifyingResultBtn.classList.remove('hidden');
+                gameState.magnifyingResultVisible = false;
+                showMessage('已隐藏放大镜结果', 'blue');
+            });
+
+            // 应用储蓄罐效果
+            elements.applyPiggyBankBtn.addEventListener('click', applyPiggyBank);
+
+            // 发布任务
+            elements.assignTaskBtn.addEventListener('click', assignTask);
+
+            // 结束任务
+            elements.endTaskBtn.addEventListener('click', endTask);
+
+            // 任务参与者复选框事件委托
+            elements.taskParticipants.addEventListener('change', (e) => {
+                if (e.target.type === 'checkbox' && e.target.classList.contains('task-participant-checkbox')) {
+                    // 如果选择了"无人完成任务"，取消选择所有学生
+                    if (e.target.value === 'none' && e.target.checked) {
+                        const studentCheckboxes = elements.taskParticipants.querySelectorAll('input[type="checkbox"]:not([value="none"])');
+                        studentCheckboxes.forEach(checkbox => {
+                            checkbox.checked = false;
+                        });
+                    } 
+                    // 如果选择了学生，取消选择"无人完成任务"
+                    else if (e.target.value !== 'none' && e.target.checked) {
+                        const noneCheckbox = elements.taskParticipants.querySelector('input[value="none"]');
+                        noneCheckbox.checked = false;
+                    }
+                }
+            });
+
+            // 显示结果
+            elements.showResultsBtn.addEventListener('click', showResults);
+        }
+
+        // 添加学生
+        function addStudent() {
+            const name = elements.newStudentName.value.trim();
+            if (!name) return;
+
+            // 检查是否已存在同名学生
+            if (gameState.students.some(student => student.name === name)) {
+                showMessage('该学生已存在', 'orange');
+                return;
+            }
+
+            // 添加新学生
+            gameState.students.push({
+                id: Date.now(),
+                name: name,
+                stars: 20,
+                apples: [],
+                piggyBank: 0
+            });
+
+            // 清空输入框
+            elements.newStudentName.value = '';
+
+            // 更新学生列表和选择器
+            updateStudentsList();
+            updateStudentSelectors();
+            
+            // 如果在任务阶段，更新任务参与者选择
+            if (gameState.phase === 'task') {
+                updateTaskParticipants();
+            }
+
+            showMessage(`已添加学生: ${name}`, 'green');
+        }
+
+        // 更新学生列表显示
+        function updateStudentsList() {
+            if (gameState.students.length === 0) {
+                elements.studentsList.innerHTML = `
+                    <div class="text-gray-500 text-center py-8">
+                        <p>请添加参与的学生...</p>
+                    </div>
+                `;
+                return;
+            }
+
+            elements.studentsList.innerHTML = '';
+            gameState.students.forEach(student => {
+                const studentEl = document.createElement('div');
+                studentEl.className = 'p-3 border border-gray-200 rounded-lg flex justify-between items-center hover:bg-gray-50 transition-colors';
+                
+                // 构建苹果列表
+                const applesHtml = student.apples.map(apple => {
+                    const value = apple.type === 'normal' ? apple.value : apple.realValue;
+                    return `<span class="inline-block w-6 h-6 bg-appleRed text-white text-xs rounded-full flex items-center justify-center ml-1">${value}</span>`;
+                }).join('');
+                
+                studentEl.innerHTML = `
+                    <div>
+                        <div class="font-bold">${student.name}</div>
+                        <div class="text-sm text-gray-600">
+                            <span class="flex items-center inline-block mr-4">
+                                <i class="fa fa-star text-starYellow mr-1"></i> ${student.stars}
+                            </span>
+                            <span class="flex items-center inline-block">
+                                <i class="fa fa-apple text-appleRed mr-1"></i> ${student.apples.length}
+                                ${applesHtml}
+                            </span>
+                        </div>
+                    </div>
+                    <div class="flex gap-2">
+                        <button class="text-red-500 hover:text-red-700" onclick="removeStudent(${student.id})" title="移除学生">
+                            <i class="fa fa-times"></i>
+                        </button>
+                    </div>
+                `;
+                elements.studentsList.appendChild(studentEl);
+            });
+        }
+
+        // 更新所有学生选择器
+        function updateStudentSelectors() {
+            // 保存当前选中值
+            const currentBidValue = elements.studentSelector.value;
+            const currentMagnifyingValue = elements.magnifyingStudentSelector.value;
+            const currentPiggyBankValue = elements.piggyBankStudentSelector.value;
+            
+            // 更新竞价学生选择器
+            elements.studentSelector.innerHTML = '<option value="">选择学生</option>';
+            // 更新放大镜学生选择器
+            elements.magnifyingStudentSelector.innerHTML = '<option value="">选择学生 (留空表示无人使用)</option>';
+            // 更新储蓄罐学生选择器
+            elements.piggyBankStudentSelector.innerHTML = '<option value="">选择学生 (留空表示无人使用)</option>';
+            
+            gameState.students.forEach(student => {
+                // 为每个选择器添加选项
+                const bidOption = document.createElement('option');
+                bidOption.value = student.id;
+                bidOption.textContent = student.name;
+                elements.studentSelector.appendChild(bidOption);
+                
+                const magnifyingOption = document.createElement('option');
+                magnifyingOption.value = student.id;
+                magnifyingOption.textContent = student.name;
+                elements.magnifyingStudentSelector.appendChild(magnifyingOption);
+                
+                const piggyOption = document.createElement('option');
+                piggyOption.value = student.id;
+                piggyOption.textContent = student.name;
+                elements.piggyBankStudentSelector.appendChild(piggyOption);
+            });
+            
+            // 恢复选中值（如果存在）
+            if (currentBidValue && gameState.students.some(s => s.id == currentBidValue)) {
+                elements.studentSelector.value = currentBidValue;
+            }
+            if (currentMagnifyingValue && gameState.students.some(s => s.id == currentMagnifyingValue)) {
+                elements.magnifyingStudentSelector.value = currentMagnifyingValue;
+            }
+            if (currentPiggyBankValue && gameState.students.some(s => s.id == currentPiggyBankValue)) {
+                elements.piggyBankStudentSelector.value = currentPiggyBankValue;
+            }
+        }
+
+        // 更新任务参与者选择框
+        function updateTaskParticipants() {
+            // 保存"无人完成任务"复选框的状态
+            const noneCheckbox = elements.taskParticipants.querySelector('input[value="none"]');
+            const noneChecked = noneCheckbox ? noneCheckbox.checked : false;
+            
+            // 清空现有内容，保留"无人完成任务"选项
+            elements.taskParticipants.innerHTML = `
+                <label class="flex items-center">
+                    <input type="checkbox" value="none" class="mr-2 task-participant-checkbox" ${noneChecked ? 'checked' : ''}>
+                    <span class="text-gray-600">无人完成任务</span>
+                </label>
+            `;
+            
+            if (gameState.students.length === 0) {
+                return;
+            }
+            
+            gameState.students.forEach(student => {
+                const checkboxEl = document.createElement('label');
+                checkboxEl.className = 'flex items-center';
+                checkboxEl.innerHTML = `
+                    <input type="checkbox" value="${student.id}" class="mr-2 task-participant-checkbox">
+                    <span>${student.name}</span>
+                `;
+                elements.taskParticipants.appendChild(checkboxEl);
+            });
+        }
+
+        // 开始拍卖
+        function startAuction() {
+            if (gameState.students.length === 0) {
+                showMessage('请先添加参与的学生', 'red');
+                return;
+            }
+
+            // 更新游戏状态
+            gameState.phase = 'auction';
+            gameState.highestBid = 0;
+            gameState.highestBidder = null;
+            gameState.bidHistory = [];
+            // 重置使用道具的学生列表
+            gameState.studentsUsedMagnifying = [];
+            gameState.studentsUsedPiggyBank = [];
+            gameState.magnifyingResultVisible = false;
+            
+            // 根据苹果类型生成价值
+            if (gameState.appleType === 'normal') {
+                generateNormalAppleValue();
+            } else {
+                generateMysteryAppleValue();
+            }
+            
+            // 更新UI
+            elements.gamePhase.textContent = '拍卖进行中';
+            elements.gamePhase.className = 'text-primary font-bold';
+            elements.startAuctionBtn.classList.add('hidden');
+            elements.endAuctionBtn.classList.remove('hidden');
+            elements.bidHistory.innerHTML = '';
+            elements.highestBid.textContent = '0 星星币';
+            elements.magnifyingResult.classList.add('hidden');
+            elements.showMagnifyingResultBtn.classList.add('hidden');
+            elements.hideMagnifyingResultBtn.classList.add('hidden');
+            
+            // 重置道具选择器
+            elements.magnifyingStudentSelector.value = '';
+            elements.piggyBankStudentSelector.value = '';
+            
+            // 设置苹果图片
+            document.querySelector('#appleDisplay img').src = `https://picsum.photos/seed/apple${gameState.currentApple}/200/200`;
+            
+            // 根据苹果类型显示相应内容
+            if (gameState.appleType === 'normal') {
+                elements.appleValueDisplay.textContent = `价值: ${gameState.appleValue} 星`;
+                elements.appleValueDisplay.classList.remove('hidden');
+                elements.mysteryOverlay.classList.add('hidden');
+            } else {
+                elements.appleValueDisplay.classList.add('hidden');
+                elements.mysteryOverlay.classList.remove('hidden');
+            }
+
+            showMessage('拍卖开始！请学生们出价', 'green');
+        }
+
+        // 出价
+        function placeBid() {
+            if (gameState.phase !== 'auction') {
+                showMessage('当前不在拍卖阶段', 'red');
+                return;
+            }
+
+            const studentId = parseInt(elements.studentSelector.value);
+            const bidAmount = parseInt(elements.bidAmount.value) || 0;
+
+            if (!studentId || bidAmount <= 0) {
+                showMessage('请选择学生并输入有效的出价', 'red');
+                return;
+            }
+
+            // 找到对应的学生
+            const student = gameState.students.find(s => s.id === studentId);
+            if (!student) {
+                showMessage('未找到该学生', 'red');
+                return;
+            }
+
+            // 检查出价是否高于当前最高价
+            if (bidAmount <= gameState.highestBid) {
+                showMessage('出价必须高于当前最高价', 'red');
+                return;
+            }
+
+            // 检查学生是否有足够的星星币
+            if (bidAmount > student.stars) {
+                showMessage(`${student.name}的星星币不足`, 'red');
+                return;
+            }
+
+            // 更新最高出价
+            gameState.highestBid = bidAmount;
+            gameState.highestBidder = student;
+
+            // 记录出价历史
+            gameState.bidHistory.push({
+                student: student.name,
+                amount: bidAmount,
+                time: new Date()
+            });
+
+            // 更新UI
+            elements.highestBid.textContent = `${bidAmount} 星星币`;
+            updateBidHistory();
+            updateStudentsList();
+
+            showMessage(`${student.name} 出价 ${bidAmount} 星星币`, 'blue');
+        }
+
+        // 更新出价历史
+        function updateBidHistory() {
+            elements.bidHistory.innerHTML = '';
+            gameState.bidHistory.forEach((bid, index) => {
+                const bidEl = document.createElement('div');
+                bidEl.className = `py-1 ${index === gameState.bidHistory.length - 1 ? 'text-appleRed font-bold' : ''}`;
+                bidEl.textContent = `${bid.student}: ${bid.amount} 星星币`;
+                elements.bidHistory.appendChild(bidEl);
+            });
+            // 滚动到底部
+            elements.bidHistory.scrollTop = elements.bidHistory.scrollHeight;
+        }
+
+        // 结束当前拍卖并重置道具使用状态
+        function endAuction() {
+            if (gameState.phase !== 'auction') return;
+
+            // 更新游戏状态
+            gameState.phase = 'auctionEnded';
+            
+            // 记录本轮拍卖结果
+            const realValue = gameState.appleType === 'normal' ? gameState.appleValue : gameState.mysteryAppleRealValue;
+            gameState.auctionHistory.push({
+                round: gameState.currentApple,
+                type: gameState.appleType === 'normal' ? '普通苹果' : '神秘苹果',
+                realValue: realValue,
+                winner: gameState.highestBidder ? gameState.highestBidder.name : '无',
+                bidPrice: gameState.highestBid
+            });
+            
+            // 更新UI
+            elements.gamePhase.textContent = '拍卖结束';
+            elements.gamePhase.className = 'text-gray-600 font-bold';
+            elements.endAuctionBtn.classList.add('hidden');
+            elements.nextAppleBtn.classList.remove('hidden');
+            // 隐藏放大镜相关控件
+            elements.magnifyingResult.classList.add('hidden');
+            elements.showMagnifyingResultBtn.classList.add('hidden');
+            elements.hideMagnifyingResultBtn.classList.add('hidden');
+            
+            // 显示神秘苹果的实际价值
+            if (gameState.appleType === 'mystery') {
+                elements.mysteryOverlay.classList.add('hidden');
+                elements.appleValueDisplay.textContent = `实际价值: ${realValue} 星`;
+                elements.appleValueDisplay.classList.remove('hidden');
+            }
+
+            // 处理拍卖结果
+            if (gameState.highestBidder) {
+                // 扣除星星币
+                gameState.highestBidder.stars -= gameState.highestBid;
+                
+                // 添加苹果
+                gameState.highestBidder.apples.push({
+                    type: gameState.appleType,
+                    value: gameState.appleValue,
+                    realValue: realValue,
+                    bid: gameState.highestBid
+                });
+
+                showMessage(`${gameState.highestBidder.name} 以 ${gameState.highestBid} 星星币拍得苹果！`, 'green');
+            } else {
+                showMessage('没有人出价，苹果流拍', 'orange');
+            }
+
+            // 重置道具使用状态和选择器
+            gameState.studentsUsedMagnifying = [];
+            gameState.studentsUsedPiggyBank = [];
+            elements.magnifyingStudentSelector.value = '';
+            elements.piggyBankStudentSelector.value = '';
+            
+            // 更新学生列表
+            updateStudentsList();
+        }
+
+        // 下一个苹果 - 只在第一次显示小任务
+        function nextApple() {
+            // 检查是否完成所有苹果拍卖
+            if (gameState.currentApple >= gameState.totalApples) {
+                gameState.phase = 'finished';
+                elements.gamePhase.textContent = '游戏结束';
+                elements.gamePhase.className = 'text-accent font-bold';
+                elements.nextAppleBtn.classList.add('hidden');
+                showMessage('所有苹果拍卖结束！可以查看结果了', 'accent');
+                return;
+            }
+
+            // 检查是否需要插入小任务（只在第一次出现，第3个苹果前）
+            gameState.currentApple++;
+            // 只在currentApple为3且任务尚未显示过时才显示小任务
+            if (gameState.currentApple === 3 && !gameState.taskShown) {
+                gameState.taskShown = true; // 标记任务已显示
+                gameState.phase = 'task';
+                elements.gamePhase.textContent = '小任务时间';
+                elements.gamePhase.className = 'text-secondary font-bold';
+                elements.nextAppleBtn.classList.add('hidden');
+                elements.startAuctionBtn.classList.add('hidden');
+                elements.assignTaskBtn.classList.remove('hidden');
+                elements.endTaskBtn.classList.remove('hidden');
+                elements.taskParticipantsContainer.classList.remove('hidden');
+                
+                // 更新任务参与者选择
+                updateTaskParticipants();
+                
+                // 如果有预设任务，显示出来
+                if (elements.miniTask.value.trim()) {
+                    showMessage(`小任务: ${elements.miniTask.value}`, 'secondary');
+                } else {
+                    showMessage('现在是小任务时间！请教师发布任务', 'secondary');
+                }
+            } else {
+                // 继续下一个拍卖
+                resetAuctionControls();
+            }
+
+            // 更新UI（显示正确的剩余苹果数量）
+            elements.currentApple.textContent = `第${gameState.currentApple}个苹果`;
+            elements.remainingApples.textContent = `${gameState.totalApples - gameState.currentApple}个`;
+            
+            // 根据苹果序号自动设置类型（前3个普通，后5个神秘，适应8个苹果的比例）
+            if (gameState.currentApple <= 3) {
+                elements.appleTypeRadios[0].checked = true;
+                gameState.appleType = 'normal';
+                elements.normalAppleValueDisplay.classList.remove('hidden');
+                elements.mysteryAppleInfo.classList.add('hidden');
+                elements.mysteryOverlay.classList.add('hidden');
+                elements.appleValueDisplay.classList.remove('hidden');
+                generateNormalAppleValue();
+            } else {
+                elements.appleTypeRadios[1].checked = true;
+                gameState.appleType = 'mystery';
+                elements.normalAppleValueDisplay.classList.add('hidden');
+                elements.mysteryAppleInfo.classList.remove('hidden');
+                elements.mysteryOverlay.classList.remove('hidden');
+                elements.appleValueDisplay.classList.add('hidden');
+                generateMysteryAppleValue();
+            }
+        }
+
+        // 重置拍卖控制
+        function resetAuctionControls() {
+            gameState.phase = 'preparation';
+            elements.gamePhase.textContent = '准备阶段';
+            elements.gamePhase.className = 'text-primary font-bold';
+            elements.nextAppleBtn.classList.add('hidden');
+            elements.startAuctionBtn.classList.remove('hidden');
+            elements.appleValueDisplay.classList.add('hidden');
+            elements.taskParticipantsContainer.classList.add('hidden');
+            elements.assignTaskBtn.classList.remove('hidden');
+            elements.endTaskBtn.classList.add('hidden');
+            // 隐藏放大镜相关控件
+            elements.magnifyingResult.classList.add('hidden');
+            elements.showMagnifyingResultBtn.classList.add('hidden');
+            elements.hideMagnifyingResultBtn.classList.add('hidden');
+        }
+
+        // 使用放大镜 - 允许多个学生在同一轮使用
+        function useMagnifyingGlass() {
+            // 获取选择的学生ID（可能为空）
+            const studentId = elements.magnifyingStudentSelector.value ? parseInt(elements.magnifyingStudentSelector.value) : null;
+            
+            // 如果未选择学生，视为无人使用
+            if (studentId === null) {
+                showMessage('未选择学生，放大镜未被使用', 'orange');
+                return;
+            }
+
+            const student = gameState.students.find(s => s.id === studentId);
+            if (!student) {
+                showMessage('未找到该学生', 'red');
+                return;
+            }
+
+            if (gameState.phase !== 'auction') {
+                showMessage('只有在拍卖阶段才能使用放大镜', 'red');
+                return;
+            }
+
+            // 检查该学生是否已经使用过放大镜
+            if (gameState.studentsUsedMagnifying.includes(studentId)) {
+                showMessage(`${student.name}已经使用过放大镜了`, 'orange');
+                return;
+            }
+
+            if (student.stars < 1) {
+                showMessage(`${student.name}的星星币不足`, 'red');
+                return;
+            }
+
+            // 扣除1个星星币
+            student.stars -= 1;
+            
+            // 记录该学生已使用放大镜
+            gameState.studentsUsedMagnifying.push(studentId);
+            
+            // 显示苹果实际价值
+            const realValue = gameState.appleType === 'normal' ? gameState.appleValue : gameState.mysteryAppleRealValue;
+            elements.magnifyingValue.innerHTML = `这个苹果的实际价值是: <span class="font-bold text-primary">${realValue}</span> 星`;
+            
+            // 显示放大镜结果和控制按钮
+            elements.magnifyingResult.classList.remove('hidden');
+            elements.showMagnifyingResultBtn.classList.add('hidden');
+            elements.hideMagnifyingResultBtn.classList.remove('hidden');
+            gameState.magnifyingResultVisible = true;
+
+            // 更新UI
+            updateStudentsList();
+            showMessage(`${student.name} 使用了放大镜，花费1星星币`, 'blue');
+        }
+
+        // 应用储蓄罐效果 - 限制只能在拍卖结束到下一轮拍卖期间使用，消耗1颗星星
+        function applyPiggyBank() {
+            // 获取选择的学生ID（可能为空）
+            const studentId = elements.piggyBankStudentSelector.value ? parseInt(elements.piggyBankStudentSelector.value) : null;
+            
+            // 如果未选择学生，视为无人使用
+            if (studentId === null) {
+                showMessage('未选择学生，储蓄罐未被应用', 'orange');
+                return;
+            }
+            
+            // 检查是否在允许的阶段使用储蓄罐（拍卖结束后或任务阶段）
+            if (gameState.phase !== 'auctionEnded' && gameState.phase !== 'task') {
+                showMessage('储蓄罐只能在拍卖结束到下一轮拍卖的期间使用', 'red');
+                return;
+            }
+
+            let studentsToApply = gameState.students;
+            
+            // 如果选择了特定学生，则只应用于该学生
+            if (studentId) {
+                const student = gameState.students.find(s => s.id === studentId);
+                if (!student) {
+                    showMessage('未找到该学生', 'red');
+                    return;
+                }
+                studentsToApply = [student];
+            }
+
+            studentsToApply.forEach(student => {
+                // 检查该学生是否已经使用过储蓄罐
+                if (gameState.studentsUsedPiggyBank.includes(student.id)) {
+                    showMessage(`${student.name}已经使用过储蓄罐了`, 'orange');
+                    return;
+                }
+                
+                // 检查是否有足够的星星币（至少1颗用于消耗）
+                if (student.stars < 1) {
+                    showMessage(`${student.name}的星星币不足，无法使用储蓄罐`, 'red');
+                    return;
+                }
+                
+                // 计算可存入的星星币（最多5颗，减去1颗消耗）
+                const saveAmount = Math.min(student.stars - 1, 5);
+                if (saveAmount <= 0) {
+                    showMessage(`${student.name}没有足够的星星币存入储蓄罐`, 'orange');
+                    return;
+                }
+                
+                // 计算利息（1.5倍）
+                const interest = Math.floor(saveAmount * 0.5);
+                
+                // 更新星星币：扣除1颗消耗 + 存入的星星币，然后加上本金和利息
+                student.stars = (student.stars - 1 - saveAmount) + saveAmount + interest;
+                
+                // 记录该学生已使用储蓄罐
+                gameState.studentsUsedPiggyBank.push(student.id);
+                
+                showMessage(`${student.name} 使用了储蓄罐（消耗1星星），获得了 ${interest} 颗星星的利息！`, 'green');
+            });
+
+            updateStudentsList();
+        }
+
+        // 发布任务
+        function assignTask() {
+            const task = elements.miniTask.value.trim();
+            if (!task) {
+                showMessage('请输入任务内容', 'red');
+                return;
+            }
+
+            gameState.currentTask = task;
+            showMessage(`已发布任务: ${task}`, 'secondary');
+            
+            // 如果当前是任务阶段，显示任务进行中
+            if (gameState.phase === 'task') {
+                elements.gamePhase.textContent = '小任务进行中';
+            }
+        }
+
+        // 结束任务并发放奖励
+        function endTask() {
+            if (gameState.phase !== 'task') return;
+            
+            // 获取完成任务的学生和"无人完成"选项
+            const noneCheckbox = elements.taskParticipants.querySelector('input[value="none"]');
+            const studentCheckboxes = elements.taskParticipants.querySelectorAll('input[type="checkbox"]:not([value="none"]):checked');
+            
+            // 检查是否有选择
+            if (studentCheckboxes.length === 0 && !noneCheckbox.checked) {
+                showMessage('请选择完成任务的学生或选择"无人完成任务"', 'red');
+                return;
+            }
+            
+            // 如果选择了"无人完成任务"
+            if (noneCheckbox.checked) {
+                showMessage('没有人完成任务，没有星星奖励', 'orange');
+            } else {
+                // 为每个完成任务的学生发放固定2颗星星
+                studentCheckboxes.forEach(checkbox => {
+                    const studentId = parseInt(checkbox.value);
+                    const student = gameState.students.find(s => s.id === studentId);
+                    if (student) {
+                        const reward = 2; // 固定奖励2颗星星
+                        student.stars += reward;
+                        showMessage(`${student.name} 完成任务，获得 ${reward} 颗星星奖励！`, 'green');
+                    }
+                });
+            }
+            
+            // 继续拍卖流程
+            resetAuctionControls();
+            updateStudentsList();
+            showMessage('任务结束，准备下一轮拍卖', 'green');
+        }
+
+        // 显示结果 - 添加每轮拍卖详情表格
+        function showResults() {
+            // 即使游戏未完全结束，也允许查看当前结果
+            if (gameState.auctionHistory.length === 0) {
+                showMessage('还没有拍卖记录', 'orange');
+                return;
+            }
+
+            // 清空结果表格
+            elements.auctionHistoryTable.innerHTML = '';
+            
+            // 填充每轮拍卖详情表格
+            gameState.auctionHistory.forEach(auction => {
+                const row = document.createElement('tr');
+                row.className = auction.winner === '无' ? 'text-gray-500' : '';
+                row.innerHTML = `
+                    <td class="py-2 px-3 border-b">第${auction.round}轮</td>
+                    <td class="py-2 px-3 border-b">${auction.type}</td>
+                    <td class="py-2 px-3 border-b">${auction.realValue} 星</td>
+                    <td class="py-2 px-3 border-b">${auction.winner}</td>
+                    <td class="py-2 px-3 border-b">${auction.bidPrice} 星</td>
+                `;
+                elements.auctionHistoryTable.appendChild(row);
+            });
+
+            // 填充最终资产统计
+            elements.resultsList.innerHTML = '';
+            
+            // 计算每个学生的总资产（星星币 + 苹果总价值）
+            const studentsWithTotal = gameState.students.map(student => {
+                const applesValue = student.apples.reduce((total, apple) => {
+                    return total + (apple.type === 'normal' ? apple.value : apple.realValue);
+                }, 0);
+                
+                return {
+                    ...student,
+                    totalValue: student.stars + applesValue,
+                    eligibleForSticker: student.stars > 10 && student.apples.length >= 1
+                };
+            }).sort((a, b) => b.totalValue - a.totalValue); // 按总资产排序
+
+            // 显示结果
+            studentsWithTotal.forEach((student, index) => {
+                const resultEl = document.createElement('div');
+                resultEl.className = `p-2 border-b ${index === 0 ? 'bg-yellow-50' : ''}`;
+                
+                // 构建苹果列表
+                const applesHtml = student.apples.map(apple => {
+                    const value = apple.type === 'normal' ? apple.value : apple.realValue;
+                    return `<span class="inline-block w-5 h-5 bg-appleRed text-white text-xs rounded-full flex items-center justify-center ml-1">${value}</span>`;
+                }).join('');
+                
+                resultEl.innerHTML = `
+                    <div class="font-bold">${index + 1}. ${student.name}</div>
+                    <div class="text-sm text-gray-600">
+                        <span class="inline-block mr-4">星星币: ${student.stars}</span>
+                        <span class="inline-block mr-4">苹果(${student.apples.length}个): ${student.apples.reduce((t, a) => t + (a.type === 'normal' ? a.value : a.realValue), 0)} 星 ${applesHtml}</span>
+                        <span class="inline-block font-bold text-primary">总资产: ${student.totalValue} 星</span>
+                    </div>
+                `;
+                elements.resultsList.appendChild(resultEl);
+            });
+
+            // 检查惊喜贴纸获得者
+            const stickerWinners = studentsWithTotal.filter(s => s.eligibleForSticker);
+            if (stickerWinners.length > 0) {
+                elements.stickerWinners.innerHTML = stickerWinners.map(s => `<span class="inline-block bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full text-sm mr-2 mb-2">${s.name}</span>`).join('');
+                elements.surpriseStickers.classList.remove('hidden');
+            } else {
+                elements.surpriseStickers.classList.add('hidden');
+            }
+
+            // 显示结果容器
+            elements.resultsContainer.classList.remove('hidden');
+        }
+
+        // 显示消息
+        function showMessage(text, color = 'black') {
+            const colors = {
+                green: 'bg-green-100 text-green-800 border-green-300',
+                red: 'bg-red-100 text-red-800 border-red-300',
+                blue: 'bg-blue-100 text-blue-800 border-blue-300',
+                orange: 'bg-orange-100 text-orange-800 border-orange-300',
+                accent: 'bg-accent/20 text-gray-800 border-accent',
+                secondary: 'bg-secondary/20 text-gray-800 border-secondary',
+                black: 'bg-gray-100 text-gray-800 border-gray-300'
+            };
+
+            elements.bidMessage.textContent = text;
+            elements.bidMessage.className = `text-center py-2 border rounded-lg ${colors[color] || colors.black}`;
+            elements.bidMessage.classList.remove('hidden');
+
+            // 3秒后自动隐藏
+            setTimeout(() => {
+                elements.bidMessage.classList.add('hidden');
+            }, 3000);
+        }
+
+        // 移除学生（暴露到全局，以便在HTML中调用）
+        window.removeStudent = function(id) {
+            if (confirm('确定要移除该学生吗？')) {
+                const studentIndex = gameState.students.findIndex(s => s.id === id);
+                if (studentIndex !== -1) {
+                    const removedStudent = gameState.students.splice(studentIndex, 1)[0];
+                    updateStudentsList();
+                    updateStudentSelectors();
+                    
+                    // 如果在任务阶段，更新任务参与者选择
+                    if (gameState.phase === 'task') {
+                        updateTaskParticipants();
+                    }
+                    
+                    showMessage(`已移除学生: ${removedStudent.name}`, 'orange');
+                }
+            }
+        };
+
+        // 初始化
+        function init() {
+            initEventListeners();
+            // 生成初始苹果价值
+            generateNormalAppleValue();
+            updateStudentsList();
+        }
+
+        // 启动游戏
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>

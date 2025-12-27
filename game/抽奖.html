@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>多档位概率摸球游戏</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    
+    <!-- 配置Tailwind自定义颜色 -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#4F46E5',
+                        secondary: '#EC4899',
+                        accent: '#10B981',
+                        premium: '#F59E0B',
+                        neutral: '#6B7280',
+                        box: '#E0F2FE'
+                    },
+                    fontFamily: {
+                        kids: ['Comic Sans MS', 'Bubblegum Sans', 'cursive']
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .ball-shadow {
+                box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2);
+            }
+            .box-border {
+                border: 6px solid #0EA5E9;
+            }
+            .shake {
+                animation: shake 0.8s cubic-bezier(.36,.07,.19,.97) both;
+            }
+            .bounce-in {
+                animation: bounceIn 0.6s cubic-bezier(0.215, 0.610, 0.355, 1.000) both;
+            }
+            .pulse {
+                animation: pulse 1.5s infinite;
+            }
+            .roll {
+                animation: roll 0.5s linear infinite;
+            }
+            .level-active {
+                transform: scale(1.05);
+                box-shadow: 0 0 15px rgba(79, 70, 229, 0.5);
+            }
+        }
+        
+        @keyframes shake {
+            10%, 90% { transform: translateX(-2px); }
+            20%, 80% { transform: translateX(4px); }
+            30%, 50%, 70% { transform: translateX(-8px); }
+            40%, 60% { transform: translateX(8px); }
+        }
+        
+        @keyframes bounceIn {
+            0% { transform: scale(0); opacity: 0; }
+            60% { transform: scale(1.1); }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        
+        @keyframes roll {
+            0% { transform: translateY(0) rotate(0deg); }
+            25% { transform: translateY(5px) rotate(90deg); }
+            50% { transform: translateY(0) rotate(180deg); }
+            75% { transform: translateY(-5px) rotate(270deg); }
+            100% { transform: translateY(0) rotate(360deg); }
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-b from-blue-50 to-indigo-100 min-h-screen font-kids">
+    <div class="container mx-auto px-4 py-8 max-w-4xl">
+        <!-- 标题区域 -->
+        <header class="text-center mb-8">
+            <h1 class="text-[clamp(2rem,5vw,3rem)] font-bold text-primary mb-2">
+                <i class="fa fa-random mr-3"></i>多档位概率摸球游戏
+            </h1>
+            <p class="text-neutral text-lg">选择不同难度，体验概率的奥秘！</p>
+        </header>
+        
+        <!-- 游戏说明 -->
+        <div class="bg-white rounded-xl p-6 shadow-lg mb-8">
+            <h2 class="text-xl font-bold text-primary mb-3">游戏规则</h2>
+            <ul class="list-disc pl-6 space-y-2 text-neutral">
+                <!-- 白球数量增加到23颗，总球数变为34颗 -->
+                <li>盒子里有34个球：<span class="inline-block w-5 h-5 rounded-full bg-red-500 align-middle mr-1"></span>2个红球（基础奖励6颗糖果）、<span class="inline-block w-5 h-5 rounded-full bg-blue-500 align-middle mr-1"></span>4个蓝球（基础奖励3颗糖果）、<span class="inline-block w-5 h-5 rounded-full bg-green-500 align-middle mr-1"></span>5个绿球（基础奖励2颗糖果）、<span class="inline-block w-5 h-5 rounded-full bg-gray-200 border border-gray-300 align-middle mr-1"></span>23个白球（基础奖励0颗糖果，谢谢参与）</li>
+                <li><strong>放回式抽奖</strong>：每次抽出球后会放回盒中，保证每次抽取概率不变</li>
+                <li><strong>糖果计算</strong>：每次抽奖获得的糖果会直接加入剩余糖果计数中</li>
+                <li class="font-bold">三个玩法档位：</li>
+                <li><span class="text-accent font-bold">普通档</span>：每次消耗1颗糖果，奖励=基础奖励</li>
+                <li><span class="text-primary font-bold">进阶档</span>：每次消耗3颗糖果，奖励=基础奖励×2倍</li>
+                <li><span class="text-premium font-bold">高级档</span>：每次消耗5颗糖果，奖励=基础奖励×3倍</li>
+                <li>净收益=本次获得奖励 - 档位消耗糖果</li>
+            </ul>
+        </div>
+        
+        <!-- 游戏区域 -->
+        <div class="flex flex-col lg:flex-row gap-8 mb-8">
+            <!-- 摸球盒子 -->
+            <div class="lg:w-2/3">
+                <div class="bg-box rounded-2xl box-border h-80 relative overflow-hidden mb-6">
+                    <div id="ball-container" class="w-full h-full">
+                        <!-- 球会通过JS动态生成 -->
+                    </div>
+                    <!-- 盒子开口 -->
+                    <div class="absolute top-0 left-1/2 transform -translate-x-1/2 w-32 h-6 bg-blue-300 rounded-b-full z-10"></div>
+                </div>
+                
+                <!-- 档位选择 -->
+                <div class="flex flex-wrap justify-center gap-4 mb-6">
+                    <button class="level-btn bg-accent hover:bg-green-600 text-white px-6 py-2 rounded-full text-md font-bold transition-all duration-300 shadow-lg hover:shadow-xl flex items-center level-active" data-level="normal" data-cost="1" data-multiplier="1">
+                        <i class="fa fa-star mr-2"></i>普通档 (1糖果)
+                    </button>
+                    <button class="level-btn bg-primary hover:bg-indigo-600 text-white px-6 py-2 rounded-full text-md font-bold transition-all duration-300 shadow-lg hover:shadow-xl flex items-center" data-level="advanced" data-cost="3" data-multiplier="2">
+                        <i class="fa fa-star mr-2"></i><i class="fa fa-star mr-2"></i>进阶档 (3糖果)
+                    </button>
+                    <button class="level-btn bg-premium hover:bg-amber-600 text-white px-6 py-2 rounded-full text-md font-bold transition-all duration-300 shadow-lg hover:shadow-xl flex items-center" data-level="premium" data-cost="5" data-multiplier="3">
+                        <i class="fa fa-star mr-2"></i><i class="fa fa-star mr-2"></i><i class="fa fa-star mr-2"></i>高级档 (5糖果)
+                    </button>
+                </div>
+                
+                <!-- 控制按钮 -->
+                <div class="flex justify-center gap-4">
+                    <button id="draw-btn" class="bg-secondary hover:bg-pink-600 text-white px-8 py-3 rounded-full text-lg font-bold transition-all duration-300 shadow-lg hover:shadow-xl flex items-center">
+                        <i class="fa fa-hand-paper-o mr-2"></i>开始抽奖
+                    </button>
+                    <button id="reset-btn" class="bg-neutral hover:bg-gray-700 text-white px-8 py-3 rounded-full text-lg font-bold transition-all duration-300 shadow-lg hover:shadow-xl flex items-center">
+                        <i class="fa fa-refresh mr-2"></i>重置游戏
+                    </button>
+                </div>
+            </div>
+            
+            <!-- 结果和统计 -->
+            <div class="lg:w-1/3 bg-white rounded-xl p-6 shadow-lg">
+                <h2 class="text-xl font-bold text-primary mb-4">游戏结果</h2>
+                
+                <div id="result-display" class="bg-yellow-50 rounded-lg p-4 mb-6 h-24 flex items-center justify-center text-center text-lg">
+                    选择档位后，点击"开始抽奖"按钮
+                </div>
+                
+                <div class="space-y-4">
+                    <div class="flex justify-between items-center">
+                        <span class="text-neutral">当前档位：</span>
+                        <span id="current-level" class="font-bold text-accent">普通档</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-neutral">抽奖次数：</span>
+                        <span id="total-tries" class="font-bold text-primary">0</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-neutral">剩余糖果：</span>
+                        <span id="remaining-candies" class="font-bold text-secondary">20</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-neutral">平均每次获得：</span>
+                        <span id="average" class="font-bold text-accent">0</span>
+                    </div>
+                </div>
+                
+                <div class="mt-6 pt-6 border-t border-gray-200">
+                    <h3 class="font-bold text-primary mb-2">已抽到的球</h3>
+                    <div id="drawn-balls" class="flex flex-wrap gap-2">
+                        <!-- 已抽到的球会在这里显示 -->
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 概率树解释（更新为白球23颗的概率计算） -->
+        <div class="bg-white rounded-xl p-6 shadow-lg mb-8">
+            <h2 class="text-xl font-bold text-primary mb-4">各档位概率与收益</h2>
+            <div class="pl-4 border-l-4 border-primary space-y-6">
+                <!-- 普通档概率（总球数34） -->
+                <div>
+                    <span class="font-bold text-accent">普通档 (消耗1糖果)：</span>
+                    <div class="pl-6 mt-2 space-y-2">
+                        <div class="flex items-center">
+                            <span class="inline-block w-5 h-5 rounded-full bg-red-500 mr-2"></span>
+                            <span>红球：概率 5.9% (2/34)，奖励：+6颗糖果，净收益：+5颗</span>
+                        </div>
+                        <div class="flex items-center">
+                            <span class="inline-block w-5 h-5 rounded-full bg-blue-500 mr-2"></span>
+                            <span>蓝球：概率 11.8% (4/34)，奖励：+3颗糖果，净收益：+2颗</span>
+                        </div>
+                        <div class="flex items-center">
+                            <span class="inline-block w-5 h-5 rounded-full bg-green-500 mr-2"></span>
+                            <span>绿球：概率 14.7% (5/34)，奖励：+2颗糖果，净收益：+1颗</span>
+                        </div>
+                        <div class="flex items-center">
+                            <span class="inline-block w-5 h-5 rounded-full bg-gray-200 border border-gray-300 mr-2"></span>
+                            <span>白球：概率 67.6% (23/34)，奖励：0颗糖果，净收益：-1颗</span>
+                        </div>
+                        <div class="text-sm text-gray-600 mt-1">长期平均：-0.17颗糖果/次（按概率加权计算）</div>
+                    </div>
+                </div>
+                
+                <!-- 进阶档概率 -->
+                <div>
+                    <span class="font-bold text-primary">进阶档 (消耗3糖果)：</span>
+                    <div class="pl-6 mt-2 space-y-2">
+                        <div class="flex items-center">
+                            <span class="inline-block w-5 h-5 rounded-full bg-red-500 mr-2"></span>
+                            <span>红球：概率 5.9% (2/34)，奖励：+12颗糖果 (6×2)，净收益：+9颗</span>
+                        </div>
+                        <div class="flex items-center">
+                            <span class="inline-block w-5 h-5 rounded-full bg-blue-500 mr-2"></span>
+                            <span>蓝球：概率 11.8% (4/34)，奖励：+6颗糖果 (3×2)，净收益：+3颗</span>
+                        </div>
+                        <div class="flex items-center">
+                            <span class="inline-block w-5 h-5 rounded-full bg-green-500 mr-2"></span>
+                            <span>绿球：概率 14.7% (5/34)，奖励：+4颗糖果 (2×2)，净收益：+1颗</span>
+                        </div>
+                        <div class="flex items-center">
+                            <span class="inline-block w-5 h-5 rounded-full bg-gray-200 border border-gray-300 mr-2"></span>
+                            <span>白球：概率 67.6% (23/34)，奖励：0颗糖果 (0×2)，净收益：-3颗</span>
+                        </div>
+                        <div class="text-sm text-gray-600 mt-1">长期平均：-0.34颗糖果/次（按概率加权计算）</div>
+                    </div>
+                </div>
+                
+                <!-- 高级档概率 -->
+                <div>
+                    <span class="font-bold text-premium">高级档 (消耗5糖果)：</span>
+                    <div class="pl-6 mt-2 space-y-2">
+                        <div class="flex items-center">
+                            <span class="inline-block w-5 h-5 rounded-full bg-red-500 mr-2"></span>
+                            <span>红球：概率 5.9% (2/34)，奖励：+18颗糖果 (6×3)，净收益：+13颗</span>
+                        </div>
+                        <div class="flex items-center">
+                            <span class="inline-block w-5 h-5 rounded-full bg-blue-500 mr-2"></span>
+                            <span>蓝球：概率 11.8% (4/34)，奖励：+9颗糖果 (3×3)，净收益：+4颗</span>
+                        </div>
+                        <div class="flex items-center">
+                            <span class="inline-block w-5 h-5 rounded-full bg-green-500 mr-2"></span>
+                            <span>绿球：概率 14.7% (5/34)，奖励：+6颗糖果 (2×3)，净收益：+1颗</span>
+                        </div>
+                        <div class="flex items-center">
+                            <span class="inline-block w-5 h-5 rounded-full bg-gray-200 border border-gray-300 mr-2"></span>
+                            <span>白球：概率 67.6% (23/34)，奖励：0颗糖果 (0×3)，净收益：-5颗</span>
+                        </div>
+                        <div class="text-sm text-gray-600 mt-1">长期平均：-0.51颗糖果/次（按概率加权计算）</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 小知识 -->
+        <div class="bg-gradient-to-r from-purple-100 to-pink-100 rounded-xl p-6 shadow-lg">
+            <h2 class="text-xl font-bold text-purple-600 mb-3">小发现</h2>
+            <p class="text-purple-800">当白球数量增加到23颗时，"无收益"概率达到67.6%，游戏难度显著提升。所有档位的长期亏损幅度进一步扩大：普通档从-0.03增至-0.17颗/次，高级档从-0.10增至-0.51颗/次。值得注意的是，亏损幅度与档位难度呈正相关——风险越高，长期亏损越大。这种设计反映了现实中许多博彩游戏的机制：高风险选项虽然可能带来更高回报，但长期来看亏损也更为严重，体现了"高风险高亏损"的概率本质。</p>
+        </div>
+        
+        <footer class="mt-12 text-center text-neutral text-sm">
+            <p>多档位概率摸球游戏 &copy; 教学用</p>
+        </footer>
+    </div>
+
+    <script>
+        // 游戏状态变量
+        let gameState = {
+            totalTries: 0,
+            remainingCandies: 20,
+            totalProfit: 0,
+            drawnBalls: [],
+            currentLevel: {
+                name: "普通档",
+                cost: 1,
+                multiplier: 1,
+                color: "text-accent"
+            }
+        };
+        
+        // DOM元素
+        const ballContainer = document.getElementById('ball-container');
+        const drawBtn = document.getElementById('draw-btn');
+        const resetBtn = document.getElementById('reset-btn');
+        const resultDisplay = document.getElementById('result-display');
+        const totalTriesEl = document.getElementById('total-tries');
+        const remainingCandiesEl = document.getElementById('remaining-candies');
+        const averageEl = document.getElementById('average');
+        const drawnBallsEl = document.getElementById('drawn-balls');
+        const currentLevelEl = document.getElementById('current-level');
+        const levelBtns = document.querySelectorAll('.level-btn');
+        
+        // 球的配置（白球数量增加到23颗）
+        const ballConfig = [
+            { color: 'bg-red-500', text: '红', count: 2, baseReward: 6 },  // 红球：2个，奖励6颗
+            { color: 'bg-blue-500', text: '蓝', count: 4, baseReward: 3 }, // 蓝球：4个，奖励3颗
+            { color: 'bg-green-500', text: '绿', count: 5, baseReward: 2 }, // 绿球：5个，奖励2颗
+            { color: 'bg-gray-200 border border-gray-300 text-gray-600', text: '白', count: 23, baseReward: 0 } // 白球：23个，奖励0颗
+        ];
+        
+        // 初始化球
+        function initBalls() {
+            ballContainer.innerHTML = '';
+            let balls = [];
+            
+            // 创建所有球（白球数量为23个）
+            ballConfig.forEach(config => {
+                for (let i = 0; i < config.count; i++) {
+                    const ball = document.createElement('div');
+                    ball.className = `ball absolute w-10 h-10 rounded-full ${config.color} text-white flex items-center justify-center font-bold cursor-pointer ball-shadow transition-all duration-300`;
+                    ball.textContent = config.text;
+                    ball.dataset.type = config.text;
+                    ball.dataset.baseReward = config.baseReward;
+                    balls.push(ball);
+                    ballContainer.appendChild(ball);
+                }
+            });
+            
+            // 随机分布球的位置
+            positionBallsRandomly(balls);
+            return balls;
+        }
+        
+        // 随机分布球的位置
+        function positionBallsRandomly(balls) {
+            balls.forEach(ball => {
+                const maxX = ballContainer.clientWidth - 40; // 40px是球的宽度
+                const maxY = ballContainer.clientHeight - 40; // 40px是球的高度
+                const x = Math.floor(Math.random() * maxX);
+                const y = Math.floor(Math.random() * maxY) + 24; // 避开顶部开口
+                
+                ball.style.left = `${x}px`;
+                ball.style.top = `${y}px`;
+            });
+        }
+        
+        // 选择档位
+        function selectLevel(btn) {
+            levelBtns.forEach(b => b.classList.remove('level-active'));
+            btn.classList.add('level-active');
+            gameState.currentLevel = {
+                name: btn.textContent.trim().split(' ')[0],
+                cost: parseInt(btn.dataset.cost),
+                multiplier: parseFloat(btn.dataset.multiplier),
+                color: btn.classList.contains('bg-accent') ? 'text-accent' : 
+                       btn.classList.contains('bg-primary') ? 'text-primary' : 'text-premium'
+            };
+            currentLevelEl.textContent = gameState.currentLevel.name;
+            currentLevelEl.className = `font-bold ${gameState.currentLevel.color}`;
+        }
+        
+        // 抽奖功能
+        function drawBall() {
+            if (gameState.remainingCandies < gameState.currentLevel.cost) {
+                resultDisplay.className = 'bg-red-50 text-red-700 rounded-lg p-4 mb-6 h-24 flex items-center justify-center text-center text-lg';
+                resultDisplay.textContent = '糖果不足！请重置游戏获取更多糖果。';
+                return;
+            }
+            
+            drawBtn.disabled = true;
+            drawBtn.classList.add('opacity-70');
+            
+            // 先扣除当前档位消耗
+            gameState.remainingCandies -= gameState.currentLevel.cost;
+            
+            const balls = ballContainer.querySelectorAll('.ball');
+            balls.forEach((ball, index) => {
+                setTimeout(() => ball.classList.add('roll'), index * 50);
+            });
+            
+            ballContainer.parentElement.classList.add('shake');
+            setTimeout(() => {
+                balls.forEach(ball => ball.classList.remove('roll'));
+                ballContainer.parentElement.classList.remove('shake');
+                
+                const randomIndex = Math.floor(Math.random() * balls.length);
+                const selectedBall = balls[randomIndex];
+                selectedBall.classList.add('scale-150', 'z-10', 'pulse');
+                
+                setTimeout(() => {
+                    const ballType = selectedBall.dataset.type;
+                    const baseReward = parseInt(selectedBall.dataset.baseReward);
+                    const reward = Math.round((baseReward * gameState.currentLevel.multiplier) * 10) / 10;
+                    
+                    // 将获得的糖果加入剩余糖果中
+                    gameState.remainingCandies += reward;
+                    const netProfit = reward - gameState.currentLevel.cost;
+                    
+                    gameState.totalTries++;
+                    gameState.totalProfit += netProfit;
+                    gameState.drawnBalls.push(ballType);
+                    
+                    updateUI(ballType, reward, netProfit);
+                    selectedBall.classList.remove('scale-150', 'z-10', 'pulse');
+                    drawBtn.disabled = false;
+                    drawBtn.classList.remove('opacity-70');
+                }, 1000);
+            }, 1500);
+        }
+        
+        // 更新UI显示
+        function updateUI(ballType, reward, netProfit) {
+            let resultText, resultClass;
+            if (netProfit > 0) {
+                resultText = `恭喜！你抽到了${ballType}球，获得${reward}颗糖果，净赚${netProfit}颗！\n剩余糖果: ${gameState.remainingCandies}`;
+                resultClass = 'bg-green-50 text-green-700';
+            } else if (netProfit === 0) {
+                resultText = `你抽到了${ballType}球，获得${reward}颗糖果，刚好不赚不亏！\n剩余糖果: ${gameState.remainingCandies}`;
+                resultClass = 'bg-blue-50 text-blue-700';
+            } else {
+                resultText = `你抽到了${ballType}球，获得${reward}颗糖果，净亏${Math.abs(netProfit)}颗。\n剩余糖果: ${gameState.remainingCandies}`;
+                resultClass = 'bg-red-50 text-red-700';
+            }
+            
+            resultDisplay.className = `rounded-lg p-4 mb-6 h-24 flex items-center justify-center text-center text-lg ${resultClass}`;
+            resultDisplay.textContent = resultText;
+            totalTriesEl.textContent = gameState.totalTries;
+            remainingCandiesEl.textContent = gameState.remainingCandies;
+            
+            const average = gameState.totalTries > 0 ? (gameState.totalProfit / gameState.totalTries).toFixed(2) : 0;
+            averageEl.textContent = average;
+            addDrawnBallIndicator(ballType);
+        }
+        
+        // 添加已抽到的球的指示器
+        function addDrawnBallIndicator(ballType) {
+            const indicator = document.createElement('div');
+            let colorClass = ballType === '红' ? 'bg-red-500' : 
+                            ballType === '蓝' ? 'bg-blue-500' : 
+                            ballType === '绿' ? 'bg-green-500' : 'bg-gray-200 border border-gray-300';
+            
+            indicator.className = `w-8 h-8 rounded-full ${colorClass} bounce-in`;
+            drawnBallsEl.appendChild(indicator);
+            drawnBallsEl.scrollLeft = drawnBallsEl.scrollWidth;
+        }
+        
+        // 重置游戏
+        function resetGame() {
+            gameState = {
+                totalTries: 0,
+                remainingCandies: 20,
+                totalProfit: 0,
+                drawnBalls: [],
+                currentLevel: { name: "普通档", cost: 1, multiplier: 1, color: "text-accent" }
+            };
+            
+            resultDisplay.className = 'bg-yellow-50 rounded-lg p-4 mb-6 h-24 flex items-center justify-center text-center text-lg';
+            resultDisplay.textContent = '选择档位后，点击"开始抽奖"按钮';
+            totalTriesEl.textContent = '0';
+            remainingCandiesEl.textContent = '20';
+            averageEl.textContent = '0';
+            drawnBallsEl.innerHTML = '';
+            currentLevelEl.textContent = '普通档';
+            currentLevelEl.className = 'font-bold text-accent';
+            
+            levelBtns.forEach(b => b.classList.remove('level-active'));
+            levelBtns[0].classList.add('level-active');
+            initBalls();
+        }
+        
+        // 事件监听
+        drawBtn.addEventListener('click', drawBall);
+        resetBtn.addEventListener('click', resetGame);
+        levelBtns.forEach(btn => btn.addEventListener('click', () => selectLevel(btn)));
+        window.addEventListener('resize', () => {
+            const balls = ballContainer.querySelectorAll('.ball');
+            if (balls.length > 0) positionBallsRandomly(balls);
+        });
+        
+        // 初始化游戏
+        const allBalls = initBalls();
+    </script>
+</body>
+</html>

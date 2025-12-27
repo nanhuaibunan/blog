@@ -1,0 +1,1972 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>数字图形对对碰 - 团队计分版</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Microsoft YaHei', sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+            color: white;
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .container {
+            max-width: 1400px;
+            width: 100%;
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid rgba(255, 255, 255, 0.3);
+        }
+        
+        h1 {
+            font-size: 2.2rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+        }
+        
+        .game-info {
+            display: flex;
+            justify-content: space-between;
+            background-color: rgba(0, 0, 0, 0.2);
+            padding: 10px 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .info-item {
+            text-align: center;
+        }
+        
+        .info-value {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: #FFD700;
+        }
+        
+        .game-area {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .panel {
+            background-color: rgba(255, 255, 255, 0.15);
+            border-radius: 10px;
+            padding: 15px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            max-height: 500px;
+            overflow-y: auto;
+        }
+        
+        .panel-title {
+            text-align: center;
+            font-size: 1.5rem;
+            margin-bottom: 15px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+            position: sticky;
+            top: 0;
+            background-color: rgba(255, 255, 255, 0.15);
+            z-index: 1;
+        }
+        
+        .items-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            justify-content: center;
+        }
+        
+        .item {
+            width: 120px;
+            height: 120px;
+            background-color: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: grab;
+            transition: transform 0.2s, box-shadow 0.2s, opacity 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .item:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.3);
+        }
+        
+        .item.dragging {
+            opacity: 0.7;
+            transform: scale(1.05);
+        }
+        
+        .item.matched {
+            opacity: 0.3;
+            cursor: default;
+        }
+        
+        .shape-container {
+            width: 70px;
+            height: 70px;
+            margin-bottom: 5px;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .shape {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+        
+        .square {
+            background-color: #FFD166;
+            border: 3px solid #FFC107;
+        }
+        
+        .triangle {
+            width: 0;
+            height: 0;
+            border-left: 35px solid transparent;
+            border-right: 35px solid transparent;
+            border-bottom: 60px solid #4ECDC4;
+            background-color: transparent;
+            position: relative;
+            top: 5px;
+        }
+        
+        .pentagon {
+            width: 65px;
+            height: 65px;
+            background-color: #6A0572;
+            clip-path: polygon(50% 0%, 100% 38%, 82% 100%, 18% 100%, 0% 38%);
+            border: 3px solid #5A0462;
+        }
+        
+        .hexagon {
+            width: 65px;
+            height: 65px;
+            background-color: #06D6A0;
+            clip-path: polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%);
+            border: 3px solid #05C690;
+        }
+        
+        .octagon {
+            width: 65px;
+            height: 65px;
+            background-color: #118AB2;
+            clip-path: polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%);
+            border: 3px solid #0D7A9F;
+        }
+        
+        .star {
+            width: 65px;
+            height: 65px;
+            background-color: #FF9E00;
+            clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);
+            border: 3px solid #E68A00;
+        }
+        
+        .diamond {
+            width: 65px;
+            height: 65px;
+            background-color: #9B5DE5;
+            clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
+            border: 3px solid #8338EC;
+        }
+        
+        .rectangle {
+            width: 65px;
+            height: 45px;
+            background-color: #F15BB5;
+            border: 3px solid #EF0F9C;
+        }
+        
+        .trapezoid {
+            width: 75px;
+            height: 55px;
+            background-color: #00BBF9;
+            clip-path: polygon(20% 0%, 80% 0%, 100% 100%, 0% 100%);
+            border: 3px solid #0096C7;
+        }
+        
+        .parallelogram {
+            width: 65px;
+            height: 45px;
+            background-color: #00F5D4;
+            clip-path: polygon(25% 0%, 100% 0%, 75% 100%, 0% 100%);
+            border: 3px solid #00CCB4;
+        }
+        
+        .cross {
+            width: 65px;
+            height: 65px;
+            background-color: #FB5607;
+            clip-path: polygon(
+                20% 0%, 80% 0%, 80% 20%, 100% 20%, 
+                100% 80%, 80% 80%, 80% 100%, 20% 100%, 
+                20% 80%, 0% 80%, 0% 20%, 20% 20%
+            );
+            border: 3px solid #D64500;
+        }
+        
+        .hole {
+            position: absolute;
+            background-color: #6a11cb;
+            border-radius: 50%;
+            border: 2px solid white;
+        }
+        
+        .hole-1 .hole:nth-child(1) {
+            width: 18px;
+            height: 18px;
+            top: 26px;
+            left: 26px;
+        }
+        
+        .hole-2 .hole:nth-child(1) {
+            width: 16px;
+            height: 16px;
+            top: 18px;
+            left: 18px;
+        }
+        
+        .hole-2 .hole:nth-child(2) {
+            width: 16px;
+            height: 16px;
+            top: 40px;
+            left: 40px;
+        }
+        
+        .hole-3 .hole:nth-child(1) {
+            width: 14px;
+            height: 14px;
+            top: 13px;
+            left: 28px;
+        }
+        
+        .hole-3 .hole:nth-child(2) {
+            width: 14px;
+            height: 14px;
+            top: 35px;
+            left: 13px;
+        }
+        
+        .hole-3 .hole:nth-child(3) {
+            width: 14px;
+            height: 14px;
+            top: 35px;
+            left: 45px;
+        }
+        
+        .hole-4 .hole:nth-child(1) {
+            width: 12px;
+            height: 12px;
+            top: 13px;
+            left: 13px;
+        }
+        
+        .hole-4 .hole:nth-child(2) {
+            width: 12px;
+            height: 12px;
+            top: 13px;
+            left: 45px;
+        }
+        
+        .hole-4 .hole:nth-child(3) {
+            width: 12px;
+            height: 12px;
+            top: 45px;
+            left: 13px;
+        }
+        
+        .hole-4 .hole:nth-child(4) {
+            width: 12px;
+            height: 12px;
+            top: 45px;
+            left: 45px;
+        }
+        
+        .item-properties {
+            font-size: 0.8rem;
+            text-align: center;
+            margin-top: 5px;
+            font-weight: bold;
+        }
+        
+        .property {
+            display: inline-block;
+            margin: 0 2px;
+            padding: 2px 5px;
+            border-radius: 3px;
+            background-color: rgba(0, 0, 0, 0.3);
+        }
+        
+        .match-area {
+            grid-column: 1 / -1;
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 15px;
+            min-height: 150px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .match-pair {
+            display: flex;
+            align-items: center;
+            background-color: rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            padding: 10px;
+            margin: 5px;
+            transition: all 0.3s;
+        }
+        
+        .match-pair.correct {
+            background-color: rgba(76, 175, 80, 0.3);
+            border: 2px solid #4CAF50;
+        }
+        
+        .match-pair.incorrect {
+            background-color: rgba(244, 67, 54, 0.3);
+            border: 2px solid #F44336;
+        }
+        
+        .match-rule {
+            margin: 0 10px;
+            font-weight: bold;
+            color: #FFD700;
+            font-size: 1.2rem;
+        }
+        
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        button {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 8px;
+            background: linear-gradient(135deg, #FF9A8B 0%, #FF6A88 100%);
+            color: white;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        
+        button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+        }
+        
+        button:active {
+            transform: translateY(1px);
+        }
+        
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .timer {
+            font-size: 2rem;
+            font-weight: bold;
+            text-align: center;
+            margin: 10px 0;
+            color: #FFD700;
+        }
+        
+        .timer.warning {
+            color: #FF6B6B;
+            animation: pulse 1s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+        
+        .rules-panel {
+            grid-column: 1 / -1;
+            margin-top: 20px;
+        }
+        
+        .rule {
+            background-color: rgba(255, 255, 255, 0.1);
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            text-align: center;
+            font-size: 1.2rem;
+        }
+        
+        .rule-highlight {
+            color: #FFD700;
+            font-weight: bold;
+            font-size: 1.3rem;
+        }
+        
+        .remove-match {
+            background: #F44336;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 25px;
+            height: 25px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            margin-left: 10px;
+            font-weight: bold;
+        }
+        
+        .rules-explanation {
+            background-color: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 20px;
+        }
+        
+        .rules-explanation h3 {
+            color: #FFD700;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+        
+        .rules-explanation p {
+            margin-bottom: 10px;
+            line-height: 1.6;
+        }
+        
+        .example {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 15px 0;
+            gap: 20px;
+        }
+        
+        .example-item {
+            width: 100px;
+            height: 100px;
+            background-color: rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .example-arrow {
+            font-size: 1.5rem;
+            color: #FFD700;
+        }
+        
+        .feedback {
+            text-align: center;
+            margin-top: 15px;
+            font-weight: bold;
+            min-height: 24px;
+            font-size: 1.1rem;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        
+        .feedback.correct {
+            color: #4CAF50;
+            background-color: rgba(76, 175, 80, 0.2);
+        }
+        
+        .feedback.incorrect {
+            color: #F44336;
+            background-color: rgba(244, 67, 54, 0.2);
+        }
+        
+        .dots-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 3px;
+            margin-top: 5px;
+            width: 60px;
+        }
+        
+        .dot {
+            width: 10px;
+            height: 10px;
+            background: #FFD700;
+            border-radius: 50%;
+            box-shadow: 0 0 3px rgba(255, 215, 0, 0.7);
+        }
+        
+        .rule-selector {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin: 15px 0;
+        }
+        
+        .rule-option {
+            padding: 10px 20px;
+            background-color: rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .rule-option.active {
+            background-color: rgba(255, 215, 0, 0.3);
+            border: 2px solid #FFD700;
+        }
+        
+        .completion-message {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 1.5rem;
+            color: #FFD700;
+            font-weight: bold;
+            animation: celebrate 1s infinite alternate;
+        }
+        
+        @keyframes celebrate {
+            0% { transform: scale(1); }
+            100% { transform: scale(1.1); }
+        }
+        
+        /* 队伍选择样式 */
+        .team-selection {
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .team-selection h3 {
+            color: #FFD700;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+        
+        .teams-form {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            justify-content: center;
+        }
+        
+        .teams-form input {
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            width: 200px;
+        }
+        
+        .teams-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+            margin-bottom: 15px;
+        }
+        
+        .team-tag {
+            background-color: rgba(255, 255, 255, 0.2);
+            padding: 8px 15px;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .team-tag .remove-team {
+            background: none;
+            border: none;
+            color: #FF6B6B;
+            cursor: pointer;
+            font-weight: bold;
+            padding: 0;
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .team-tag .select-team {
+            background: none;
+            border: 1px solid #FFD700;
+            color: #FFD700;
+            cursor: pointer;
+            font-weight: bold;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+        }
+        
+        .team-tag.selected {
+            background-color: rgba(255, 215, 0, 0.3);
+            border: 2px solid #FFD700;
+        }
+        
+        .current-team {
+            text-align: center;
+            margin-bottom: 15px;
+            font-size: 1.2rem;
+        }
+        
+        .current-team span {
+            color: #FFD700;
+            font-weight: bold;
+        }
+        
+        /* 排行榜样式 */
+        .leaderboard {
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+        
+        .leaderboard h3 {
+            color: #FFD700;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+        
+        .leaderboard-list {
+            list-style-type: none;
+        }
+        
+        .leaderboard-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 15px;
+            margin-bottom: 8px;
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 5px;
+        }
+        
+        .leaderboard-item:nth-child(1) {
+            background-color: rgba(255, 215, 0, 0.3);
+            border: 2px solid #FFD700;
+        }
+        
+        .leaderboard-item:nth-child(2) {
+            background-color: rgba(192, 192, 192, 0.3);
+            border: 2px solid #C0C0C0;
+        }
+        
+        .leaderboard-item:nth-child(3) {
+            background-color: rgba(205, 127, 50, 0.3);
+            border: 2px solid #CD7F32;
+        }
+        
+        .team-score {
+            font-weight: bold;
+            color: #FFD700;
+        }
+        
+        /* 模态框样式 */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .modal-content {
+            background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+            padding: 30px;
+            border-radius: 15px;
+            max-width: 600px;
+            width: 95%;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        }
+        
+        @media (max-width: 768px) {
+            .game-area {
+                grid-template-columns: 1fr;
+            }
+            
+            .item {
+                width: 110px;
+                height: 110px;
+            }
+            
+            .shape-container {
+                width: 70px;
+                height: 70px;
+            }
+            
+            .rule-selector {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .teams-form {
+                flex-direction: column;
+                align-items: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>数字图形对对碰 - 团队计分版</h1>
+            <p>团队协作匹配游戏</p>
+        </header>
+        
+        <!-- 队伍选择模块 -->
+        <div class="team-selection" id="team-selection">
+            <h3>队伍管理</h3>
+            <div class="teams-form">
+                <input type="text" id="team-name" placeholder="输入队伍名称">
+                <button id="add-team">添加队伍</button>
+            </div>
+            <div class="teams-list" id="teams-list">
+                <!-- 队伍列表将通过JS动态生成 -->
+            </div>
+            <div class="current-team" id="current-team-display">
+                当前选中队伍: <span id="current-team-name">未选择</span>
+            </div>
+            <div style="text-align: center;">
+                <button id="start-game-btn" disabled>开始游戏</button>
+            </div>
+        </div>
+        
+        <!-- 游戏区域（初始隐藏） -->
+        <div id="game-container" style="display: none;">
+            <div class="game-info">
+                <div class="info-item">
+                    <div>当前轮次</div>
+                    <div class="info-value" id="round">1/5</div>
+                </div>
+                <div class="info-item">
+                    <div>剩余时间</div>
+                    <div class="info-value timer" id="timer">01:00</div>
+                </div>
+                <div class="info-item">
+                    <div>当前队伍得分</div>
+                    <div class="info-value" id="team-score">0</div>
+                </div>
+            </div>
+            
+            <div class="rule-selector">
+                <div class="rule-option active" data-rule="holes">规则1: 图形孔洞数 = 数字圆点数量</div>
+                <div class="rule-option" data-rule="sides">规则2: 图形边数 = 数字本身</div>
+            </div>
+            
+            <div class="rules-panel panel">
+                <div class="panel-title">当前匹配规则</div>
+                <div class="rule">
+                    <span class="rule-highlight" id="current-rule">图形孔洞数 = 数字圆点数量</span>
+                </div>
+            </div>
+            
+            <div class="game-area">
+                <div class="panel">
+                    <div class="panel-title">图形库</div>
+                    <div class="items-container" id="shapes-container">
+                        <!-- 图形将通过JS动态生成 -->
+                    </div>
+                </div>
+                
+                <div class="panel">
+                    <div class="panel-title">数字库</div>
+                    <div class="items-container" id="numbers-container">
+                        <!-- 数字将通过JS动态生成 -->
+                    </div>
+                </div>
+                
+                <div class="match-area" id="match-area">
+                    <p>将图形拖拽到此处与数字匹配</p>
+                </div>
+            </div>
+            
+            <div class="feedback" id="feedback"></div>
+            
+            <div id="completion-message" class="completion-message" style="display: none;"></div>
+            
+            <div class="controls">
+                <button id="start-btn">开始本轮</button>
+                <button id="check-btn" disabled>检查匹配</button>
+                <button id="next-round-btn" disabled>下一轮</button>
+                <button id="reset-btn">返回队伍选择</button>
+            </div>
+            
+            <!-- 排行榜 -->
+            <div class="leaderboard">
+                <h3>队伍得分排行榜</h3>
+                <ul class="leaderboard-list" id="leaderboard-list">
+                    <!-- 排行榜将通过JS动态生成 -->
+                </ul>
+            </div>
+        </div>
+        
+        <!-- 最终排行榜模态框 -->
+        <div class="modal" id="final-leaderboard-modal" style="display: none;">
+            <div class="modal-content">
+                <h2>游戏结束 - 最终排行榜</h2>
+                <div id="final-leaderboard-content">
+                    <!-- 最终排行榜内容将通过JS动态生成 -->
+                </div>
+                <button id="play-again-btn">再玩一次</button>
+            </div>
+        </div>
+        
+        <div class="rules-explanation">
+            <h3>规则详解</h3>
+            <p>在这个游戏中，你可以选择两种不同的匹配规则：</p>
+            
+            <p><strong>规则1: 图形孔洞数 = 数字圆点数量</strong></p>
+            <div class="example">
+                <div class="example-item">
+                    <div class="shape-container">
+                        <div class="shape square"></div>
+                        <div class="hole-1">
+                            <div class="hole"></div>
+                        </div>
+                    </div>
+                    <div class="item-properties">孔洞:1</div>
+                </div>
+                <div class="example-arrow">→</div>
+                <div class="example-item">
+                    <div style="font-size: 2rem; font-weight: bold;">4</div>
+                    <div class="item-properties">圆点:1</div>
+                    <div class="dots-container">
+                        <div class="dot"></div>
+                    </div>
+                </div>
+                <div class="example-arrow">=</div>
+                <div style="font-size: 1.5rem; color: #4CAF50;">正确匹配</div>
+            </div>
+            
+            <p><strong>规则2: 图形边数 = 数字本身</strong></p>
+            <div class="example">
+                <div class="example-item">
+                    <div class="shape-container">
+                        <div class="shape triangle"></div>
+                    </div>
+                    <div class="item-properties">边数:3</div>
+                </div>
+                <div class="example-arrow">→</div>
+                <div class="example-item">
+                    <div style="font-size: 2rem; font-weight: bold;">3</div>
+                    <div class="item-properties">数字:3</div>
+                </div>
+                <div class="example-arrow">=</div>
+                <div style="font-size: 1.5rem; color: #4CAF50;">正确匹配</div>
+            </div>
+            
+            <p>系统会自动判断你的匹配是否正确，并给出即时反馈。每完成一个正确匹配，当前队伍将获得10分！正确匹配的图形和数字会变淡并无法再次选择。</p>
+        </div>
+    </div>
+
+    <script>
+        // 游戏数据
+        const gameData = {
+            currentRound: 1,
+            totalRounds: 5,
+            teamScore: 0,
+            timeLeft: 60, // 1分钟
+            timerInterval: null,
+            isGameActive: false,
+            currentRule: 'holes', // 'holes' 或 'sides'
+            
+            // 队伍数据
+            teams: [],
+            currentTeamIndex: -1, // 初始为-1，表示未选择队伍
+            
+            // 图形数据 - 没有圆形
+            shapes: [
+                // 规则1匹配：图形孔洞数 = 数字圆点数量
+                { id: 1, name: "正方形", type: "square", className: "square", holes: 1, sides: 4 },
+                { id: 2, name: "正方形", type: "square", className: "square", holes: 2, sides: 4 },
+                { id: 3, name: "三角形", type: "triangle", className: "triangle", holes: 1, sides: 3 },
+                { id: 4, name: "三角形", type: "triangle", className: "triangle", holes: 2, sides: 3 },
+                { id: 5, name: "五边形", type: "pentagon", className: "pentagon", holes: 1, sides: 5 },
+                { id: 6, name: "五边形", type: "pentagon", className: "pentagon", holes: 3, sides: 5 },
+                { id: 7, name: "六边形", type: "hexagon", className: "hexagon", holes: 1, sides: 6 },
+                { id: 8, name: "六边形", type: "hexagon", className: "hexagon", holes: 2, sides: 6 },
+                { id: 9, name: "八边形", type: "octagon", className: "octagon", holes: 1, sides: 8 },
+                { id: 10, name: "八边形", type: "octagon", className: "octagon", holes: 2, sides: 8 },
+                { id: 11, name: "星形", type: "star", className: "star", holes: 1, sides: 10 },
+                { id: 12, name: "菱形", type: "diamond", className: "diamond", holes: 1, sides: 4 },
+                { id: 13, name: "矩形", type: "rectangle", className: "rectangle", holes: 1, sides: 4 },
+                { id: 14, name: "梯形", type: "trapezoid", className: "trapezoid", holes: 1, sides: 4 },
+                { id: 15, name: "平行四边形", type: "parallelogram", className: "parallelogram", holes: 1, sides: 4 },
+                { id: 16, name: "十字形", type: "cross", className: "cross", holes: 1, sides: 12 },
+                
+                // 重复图形以增加选项数量
+                { id: 17, name: "正方形", type: "square", className: "square", holes: 1, sides: 4 },
+                { id: 18, name: "正方形", type: "square", className: "square", holes: 2, sides: 4 },
+                { id: 19, name: "三角形", type: "triangle", className: "triangle", holes: 1, sides: 3 },
+                { id: 20, name: "三角形", type: "triangle", className: "triangle", holes: 2, sides: 3 },
+                { id: 21, name: "五边形", type: "pentagon", className: "pentagon", holes: 1, sides: 5 },
+                { id: 22, name: "五边形", type: "pentagon", className: "pentagon", holes: 3, sides: 5 },
+                { id: 23, name: "六边形", type: "hexagon", className: "hexagon", holes: 1, sides: 6 },
+                { id: 24, name: "六边形", type: "hexagon", className: "hexagon", holes: 2, sides: 6 },
+                { id: 25, name: "八边形", type: "octagon", className: "octagon", holes: 1, sides: 8 },
+                { id: 26, name: "八边形", type: "octagon", className: "octagon", holes: 2, sides: 8 },
+                { id: 27, name: "星形", type: "star", className: "star", holes: 1, sides: 10 },
+                { id: 28, name: "菱形", type: "diamond", className: "diamond", holes: 1, sides: 4 },
+                { id: 29, name: "矩形", type: "rectangle", className: "rectangle", holes: 1, sides: 4 },
+                { id: 30, name: "梯形", type: "trapezoid", className: "trapezoid", holes: 1, sides: 4 },
+                { id: 31, name: "平行四边形", type: "parallelogram", className: "parallelogram", holes: 1, sides: 4 },
+                { id: 32, name: "十字形", type: "cross", className: "cross", holes: 1, sides: 12 },
+                
+                // 更多重复图形
+                { id: 33, name: "正方形", type: "square", className: "square", holes: 1, sides: 4 },
+                { id: 34, name: "正方形", type: "square", className: "square", holes: 2, sides: 4 },
+                { id: 35, name: "三角形", type: "triangle", className: "triangle", holes: 1, sides: 3 },
+                { id: 36, name: "三角形", type: "triangle", className: "triangle", holes: 2, sides: 3 },
+                { id: 37, name: "五边形", type: "pentagon", className: "pentagon", holes: 1, sides: 5 },
+                { id: 38, name: "五边形", type: "pentagon", className: "pentagon", holes: 3, sides: 5 },
+                { id: 39, name: "六边形", type: "hexagon", className: "hexagon", holes: 1, sides: 6 },
+                { id: 40, name: "六边形", type: "hexagon", className: "hexagon", holes: 2, sides: 6 }
+            ],
+            
+            // 数字数据 - 优化匹配关系
+            numbers: [
+                // 规则1匹配：图形孔洞数 = 数字圆点数量
+                { id: 1, value: 4, dots: 1 },   // 匹配正方形1孔洞
+                { id: 2, value: 4, dots: 2 },   // 匹配正方形2孔洞
+                { id: 3, value: 3, dots: 1 },   // 匹配三角形1孔洞
+                { id: 4, value: 3, dots: 2 },   // 匹配三角形2孔洞
+                { id: 5, value: 5, dots: 1 },   // 匹配五边形1孔洞
+                { id: 6, value: 5, dots: 3 },   // 匹配五边形3孔洞
+                { id: 7, value: 6, dots: 1 },   // 匹配六边形1孔洞
+                { id: 8, value: 6, dots: 2 },   // 匹配六边形2孔洞
+                { id: 9, value: 8, dots: 1 },   // 匹配八边形1孔洞
+                { id: 10, value: 8, dots: 2 },  // 匹配八边形2孔洞
+                { id: 11, value: 10, dots: 1 }, // 匹配星形1孔洞
+                { id: 12, value: 4, dots: 1 },  // 匹配菱形1孔洞
+                { id: 13, value: 4, dots: 1 },  // 匹配矩形1孔洞
+                { id: 14, value: 4, dots: 1 },  // 匹配梯形1孔洞
+                { id: 15, value: 4, dots: 1 },  // 匹配平行四边形1孔洞
+                { id: 16, value: 12, dots: 1 }, // 匹配十字形1孔洞
+                
+                // 重复数字以增加选项数量
+                { id: 17, value: 4, dots: 1 },
+                { id: 18, value: 4, dots: 2 },
+                { id: 19, value: 3, dots: 1 },
+                { id: 20, value: 3, dots: 2 },
+                { id: 21, value: 5, dots: 1 },
+                { id: 22, value: 5, dots: 3 },
+                { id: 23, value: 6, dots: 1 },
+                { id: 24, value: 6, dots: 2 },
+                { id: 25, value: 8, dots: 1 },
+                { id: 26, value: 8, dots: 2 },
+                { id: 27, value: 10, dots: 1 },
+                { id: 28, value: 4, dots: 1 },
+                { id: 29, value: 4, dots: 1 },
+                { id: 30, value: 4, dots: 1 },
+                { id: 31, value: 4, dots: 1 },
+                { id: 32, value: 12, dots: 1 },
+                
+                // 更多重复数字
+                { id: 33, value: 4, dots: 1 },
+                { id: 34, value: 4, dots: 2 },
+                { id: 35, value: 3, dots: 1 },
+                { id: 36, value: 3, dots: 2 },
+                { id: 37, value: 5, dots: 1 },
+                { id: 38, value: 5, dots: 3 },
+                { id: 39, value: 6, dots: 1 },
+                { id: 40, value: 6, dots: 2 }
+            ],
+            
+            // 当前匹配
+            currentMatches: [],
+            
+            // 已匹配的图形和数字ID
+            matchedShapeIds: [],
+            matchedNumberIds: []
+        };
+
+        // DOM元素
+        const elements = {
+            // 队伍选择
+            teamSelection: document.getElementById('team-selection'),
+            teamNameInput: document.getElementById('team-name'),
+            addTeamBtn: document.getElementById('add-team'),
+            teamsList: document.getElementById('teams-list'),
+            currentTeamDisplay: document.getElementById('current-team-display'),
+            currentTeamName: document.getElementById('current-team-name'),
+            startGameBtn: document.getElementById('start-game-btn'),
+            
+            // 游戏区域
+            gameContainer: document.getElementById('game-container'),
+            round: document.getElementById('round'),
+            timer: document.getElementById('timer'),
+            teamScore: document.getElementById('team-score'),
+            shapesContainer: document.getElementById('shapes-container'),
+            numbersContainer: document.getElementById('numbers-container'),
+            matchArea: document.getElementById('match-area'),
+            startBtn: document.getElementById('start-btn'),
+            checkBtn: document.getElementById('check-btn'),
+            nextRoundBtn: document.getElementById('next-round-btn'),
+            resetBtn: document.getElementById('reset-btn'),
+            feedback: document.getElementById('feedback'),
+            currentRule: document.getElementById('current-rule'),
+            ruleOptions: document.querySelectorAll('.rule-option'),
+            completionMessage: document.getElementById('completion-message'),
+            
+            // 排行榜
+            leaderboardList: document.getElementById('leaderboard-list'),
+            
+            // 最终排行榜
+            finalLeaderboardModal: document.getElementById('final-leaderboard-modal'),
+            finalLeaderboardContent: document.getElementById('final-leaderboard-content'),
+            playAgainBtn: document.getElementById('play-again-btn')
+        };
+
+        // 初始化游戏
+        function initGame() {
+            // 重置游戏状态
+            gameData.currentRound = 1;
+            gameData.teamScore = 0;
+            gameData.currentMatches = [];
+            gameData.matchedShapeIds = [];
+            gameData.matchedNumberIds = [];
+            gameData.isGameActive = false;
+            gameData.currentRule = 'holes';
+            gameData.timeLeft = 60;
+            
+            // 更新UI
+            updateUI();
+            
+            // 生成图形和数字
+            generateShapes();
+            generateNumbers();
+            
+            // 隐藏完成消息
+            elements.completionMessage.style.display = 'none';
+            
+            // 重置按钮状态
+            elements.startBtn.disabled = false;
+            elements.checkBtn.disabled = true;
+            elements.nextRoundBtn.disabled = true;
+            
+            // 更新排行榜
+            updateLeaderboard();
+            
+            // 更新当前队伍显示
+            updateCurrentTeamDisplay();
+        }
+
+        // 打乱数组顺序
+        function shuffleArray(array) {
+            const newArray = [...array];
+            for (let i = newArray.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
+            }
+            return newArray;
+        }
+
+        // 生成图形
+        function generateShapes() {
+            elements.shapesContainer.innerHTML = '';
+            
+            // 根据当前轮次选择要显示的图形
+            let shapesToShow = getShapesForCurrentRound();
+            
+            // 打乱图形顺序
+            shapesToShow = shuffleArray(shapesToShow);
+            
+            shapesToShow.forEach(shape => {
+                // 检查图形是否已匹配
+                const isMatched = gameData.matchedShapeIds.includes(shape.id);
+                
+                const shapeElement = document.createElement('div');
+                shapeElement.className = `item ${isMatched ? 'matched' : ''}`;
+                shapeElement.draggable = !isMatched && gameData.isGameActive;
+                shapeElement.dataset.id = shape.id;
+                shapeElement.dataset.type = 'shape';
+                shapeElement.dataset.holes = shape.holes;
+                shapeElement.dataset.sides = shape.sides;
+                
+                // 创建孔洞
+                let holesHtml = '';
+                for (let i = 0; i < shape.holes; i++) {
+                    holesHtml += '<div class="hole"></div>';
+                }
+                
+                // 根据当前规则显示不同的属性
+                let propertiesHtml = '';
+                if (gameData.currentRule === 'holes') {
+                    propertiesHtml = `<span class="property">孔洞:${shape.holes}</span>`;
+                } else {
+                    propertiesHtml = `<span class="property">边数:${shape.sides}</span>`;
+                }
+                
+                shapeElement.innerHTML = `
+                    <div class="shape-container">
+                        <div class="shape ${shape.className}"></div>
+                        ${shape.holes > 0 ? `<div class="hole-${shape.holes}">${holesHtml}</div>` : ''}
+                    </div>
+                    <div class="item-properties">
+                        ${propertiesHtml}
+                    </div>
+                `;
+                
+                elements.shapesContainer.appendChild(shapeElement);
+            });
+        }
+
+        // 生成数字
+        function generateNumbers() {
+            elements.numbersContainer.innerHTML = '';
+            
+            // 根据当前轮次选择要显示的数字
+            let numbersToShow = getNumbersForCurrentRound();
+            
+            // 打乱数字顺序
+            numbersToShow = shuffleArray(numbersToShow);
+            
+            numbersToShow.forEach(number => {
+                // 检查数字是否已匹配
+                const isMatched = gameData.matchedNumberIds.includes(number.id);
+                
+                const numberElement = document.createElement('div');
+                numberElement.className = `item ${isMatched ? 'matched' : ''}`;
+                numberElement.draggable = !isMatched && gameData.isGameActive;
+                numberElement.dataset.id = number.id;
+                numberElement.dataset.type = 'number';
+                numberElement.dataset.dots = number.dots;
+                numberElement.dataset.value = number.value;
+                
+                // 创建圆点可视化
+                let dotsHtml = '';
+                for (let i = 0; i < number.dots; i++) {
+                    dotsHtml += '<div class="dot"></div>';
+                }
+                
+                // 根据当前规则显示不同的属性
+                let propertiesHtml = '';
+                if (gameData.currentRule === 'holes') {
+                    propertiesHtml = `<span class="property">圆点:${number.dots}</span>`;
+                } else {
+                    propertiesHtml = `<span class="property">数字:${number.value}</span>`;
+                }
+                
+                numberElement.innerHTML = `
+                    <div style="font-size: 2rem; font-weight: bold;">${number.value}</div>
+                    <div class="item-properties">
+                        ${propertiesHtml}
+                    </div>
+                    ${gameData.currentRule === 'holes' ? `<div class="dots-container">${dotsHtml}</div>` : ''}
+                `;
+                
+                elements.numbersContainer.appendChild(numberElement);
+            });
+        }
+
+        // 更新UI
+        function updateUI() {
+            elements.round.textContent = `${gameData.currentRound}/${gameData.totalRounds}`;
+            elements.teamScore.textContent = gameData.teamScore;
+            updateTimerDisplay();
+            
+            // 更新当前规则显示
+            if (gameData.currentRule === 'holes') {
+                elements.currentRule.textContent = '图形孔洞数 = 数字圆点数量';
+            } else {
+                elements.currentRule.textContent = '图形边数 = 数字本身';
+            }
+            
+            // 更新规则选项高亮
+            elements.ruleOptions.forEach(option => {
+                if (option.dataset.rule === gameData.currentRule) {
+                    option.classList.add('active');
+                } else {
+                    option.classList.remove('active');
+                }
+            });
+        }
+
+        // 更新计时器显示
+        function updateTimerDisplay() {
+            const minutes = Math.floor(gameData.timeLeft / 60);
+            const seconds = gameData.timeLeft % 60;
+            elements.timer.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            
+            // 时间不足时添加警告样式
+            if (gameData.timeLeft <= 10) {
+                elements.timer.classList.add('warning');
+            } else {
+                elements.timer.classList.remove('warning');
+            }
+        }
+
+        // 开始游戏
+        function startGame() {
+            gameData.isGameActive = true;
+            elements.startBtn.disabled = true;
+            elements.checkBtn.disabled = false;
+            
+            // 设置计时器
+            gameData.timerInterval = setInterval(function() {
+                gameData.timeLeft--;
+                updateTimerDisplay();
+                
+                if (gameData.timeLeft <= 0) {
+                    endRound();
+                }
+            }, 1000);
+            
+            // 重新生成图形和数字，启用拖拽
+            generateShapes();
+            generateNumbers();
+        }
+
+        // 更新匹配区域
+        function updateMatchArea() {
+            elements.matchArea.innerHTML = '';
+            
+            if (gameData.currentMatches.length === 0) {
+                elements.matchArea.innerHTML = '<p>将图形拖拽到此处与数字匹配</p>';
+                return;
+            }
+            
+            gameData.currentMatches.forEach(match => {
+                const shape = gameData.shapes.find(s => s.id === match.shapeId);
+                const number = gameData.numbers.find(n => n.id === match.numberId);
+                
+                if (shape && number) {
+                    const matchPair = document.createElement('div');
+                    matchPair.className = 'match-pair';
+                    matchPair.dataset.shapeId = shape.id;
+                    matchPair.dataset.numberId = number.id;
+                    
+                    // 检查匹配是否正确
+                    let isCorrect = false;
+                    if (gameData.currentRule === 'holes') {
+                        isCorrect = shape.holes === number.dots;
+                    } else {
+                        isCorrect = shape.sides === number.value;
+                    }
+                    
+                    if (isCorrect) {
+                        matchPair.classList.add('correct');
+                    } else {
+                        matchPair.classList.add('incorrect');
+                    }
+                    
+                    // 创建孔洞
+                    let holesHtml = '';
+                    for (let i = 0; i < shape.holes; i++) {
+                        holesHtml += '<div class="hole"></div>';
+                    }
+                    
+                    // 创建圆点可视化
+                    let dotsHtml = '';
+                    for (let i = 0; i < number.dots; i++) {
+                        dotsHtml += '<div class="dot"></div>';
+                    }
+                    
+                    // 根据当前规则显示不同的属性
+                    let shapePropertiesHtml = '';
+                    let numberPropertiesHtml = '';
+                    
+                    if (gameData.currentRule === 'holes') {
+                        shapePropertiesHtml = `<span class="property">孔洞:${shape.holes}</span>`;
+                        numberPropertiesHtml = `<span class="property">圆点:${number.dots}</span>`;
+                    } else {
+                        shapePropertiesHtml = `<span class="property">边数:${shape.sides}</span>`;
+                        numberPropertiesHtml = `<span class="property">数字:${number.value}</span>`;
+                    }
+                    
+                    matchPair.innerHTML = `
+                        <div class="item">
+                            <div class="shape-container">
+                                <div class="shape ${shape.className}"></div>
+                                ${shape.holes > 0 ? `<div class="hole-${shape.holes}">${holesHtml}</div>` : ''}
+                            </div>
+                            <div class="item-properties">
+                                ${shapePropertiesHtml}
+                            </div>
+                        </div>
+                        <div class="match-rule">→</div>
+                        <div class="item">
+                            <div style="font-size: 2rem; font-weight: bold;">${number.value}</div>
+                            <div class="item-properties">
+                                ${numberPropertiesHtml}
+                            </div>
+                            ${gameData.currentRule === 'holes' ? `<div class="dots-container">${dotsHtml}</div>` : ''}
+                        </div>
+                        <button class="remove-match" data-shape="${shape.id}" data-number="${number.id}">×</button>
+                    `;
+                    
+                    elements.matchArea.appendChild(matchPair);
+                }
+            });
+            
+            // 添加移除匹配的事件监听器
+            document.querySelectorAll('.remove-match').forEach(button => {
+                button.addEventListener('click', function() {
+                    const shapeId = parseInt(this.dataset.shape);
+                    const numberId = parseInt(this.dataset.number);
+                    removeMatch(shapeId, numberId);
+                });
+            });
+        }
+
+        // 移除匹配
+        function removeMatch(shapeId, numberId) {
+            gameData.currentMatches = gameData.currentMatches.filter(
+                match => !(match.shapeId === shapeId && match.numberId === numberId)
+            );
+            updateMatchArea();
+            elements.feedback.textContent = '';
+            elements.feedback.className = 'feedback';
+        }
+
+        // 检查是否所有图形和数字都已匹配
+        function checkCompletion() {
+            const shapesToShow = getShapesForCurrentRound();
+            const numbersToShow = getNumbersForCurrentRound();
+            
+            const allShapesMatched = shapesToShow.every(shape => 
+                gameData.matchedShapeIds.includes(shape.id)
+            );
+            
+            const allNumbersMatched = numbersToShow.every(number => 
+                gameData.matchedNumberIds.includes(number.id)
+            );
+            
+            if (allShapesMatched && allNumbersMatched) {
+                elements.completionMessage.textContent = `恭喜！你已完成第${gameData.currentRound}轮所有匹配！`;
+                elements.completionMessage.style.display = 'block';
+                elements.nextRoundBtn.disabled = false;
+                return true;
+            }
+            
+            return false;
+        }
+
+        // 获取当前轮次应该显示的图形
+        function getShapesForCurrentRound() {
+            if (gameData.currentRound === 1) {
+                return gameData.shapes.slice(0, 15);
+            } else if (gameData.currentRound === 2) {
+                return gameData.shapes.slice(0, 20);
+            } else if (gameData.currentRound === 3) {
+                return gameData.shapes.slice(0, 25);
+            } else if (gameData.currentRound === 4) {
+                return gameData.shapes.slice(0, 30);
+            } else {
+                return gameData.shapes;
+            }
+        }
+
+        // 获取当前轮次应该显示的数字
+        function getNumbersForCurrentRound() {
+            if (gameData.currentRound === 1) {
+                return gameData.numbers.slice(0, 15);
+            } else if (gameData.currentRound === 2) {
+                return gameData.numbers.slice(0, 20);
+            } else if (gameData.currentRound === 3) {
+                return gameData.numbers.slice(0, 25);
+            } else if (gameData.currentRound === 4) {
+                return gameData.numbers.slice(0, 30);
+            } else {
+                return gameData.numbers;
+            }
+        }
+
+        // 更新排行榜
+        function updateLeaderboard() {
+            elements.leaderboardList.innerHTML = '';
+            
+            // 按队伍得分排序
+            const sortedTeams = [...gameData.teams].sort((a, b) => b.score - a.score);
+            
+            sortedTeams.forEach((team, index) => {
+                const leaderboardItem = document.createElement('li');
+                leaderboardItem.className = 'leaderboard-item';
+                
+                leaderboardItem.innerHTML = `
+                    <span>${index + 1}. ${team.name}</span>
+                    <span class="team-score">${team.score}分</span>
+                `;
+                
+                elements.leaderboardList.appendChild(leaderboardItem);
+            });
+        }
+
+        // 显示最终排行榜
+        function showFinalLeaderboard() {
+            elements.finalLeaderboardContent.innerHTML = '';
+            
+            // 按队伍得分排序
+            const sortedTeams = [...gameData.teams].sort((a, b) => b.score - a.score);
+            
+            sortedTeams.forEach((team, index) => {
+                const leaderboardItem = document.createElement('div');
+                leaderboardItem.className = 'leaderboard-item';
+                
+                leaderboardItem.innerHTML = `
+                    <span>${index + 1}. ${team.name}</span>
+                    <span class="team-score">${team.score}分</span>
+                `;
+                
+                elements.finalLeaderboardContent.appendChild(leaderboardItem);
+            });
+            
+            elements.finalLeaderboardModal.style.display = 'flex';
+        }
+
+        // 结束当前轮次
+        function endRound() {
+            clearInterval(gameData.timerInterval);
+            gameData.isGameActive = false;
+            elements.checkBtn.disabled = true;
+            
+            // 检查是否完成所有匹配
+            if (!checkCompletion()) {
+                elements.feedback.textContent = '时间到！本轮游戏结束！';
+                elements.feedback.className = 'feedback incorrect';
+                elements.nextRoundBtn.disabled = false;
+            }
+        }
+
+        // 进入下一轮
+        function nextRound() {
+            // 如果是第五轮，显示最终排行榜
+            if (gameData.currentRound >= gameData.totalRounds) {
+                // 将当前队伍的得分计入排行榜
+                if (gameData.teams.length > 0 && gameData.currentTeamIndex !== -1) {
+                    gameData.teams[gameData.currentTeamIndex].score = gameData.teamScore;
+                }
+                
+                showFinalLeaderboard();
+                return;
+            }
+            
+            gameData.currentRound++;
+            gameData.currentMatches = [];
+            gameData.matchedShapeIds = [];
+            gameData.matchedNumberIds = [];
+            gameData.timeLeft = 60;
+            
+            // 生成新的图形和数字
+            generateShapes();
+            generateNumbers();
+            
+            // 更新UI
+            updateUI();
+            
+            // 重置按钮状态
+            elements.startBtn.disabled = false;
+            elements.checkBtn.disabled = true;
+            elements.nextRoundBtn.disabled = true;
+            
+            // 清除反馈
+            elements.feedback.textContent = '';
+            elements.feedback.className = 'feedback';
+            
+            // 隐藏完成消息
+            elements.completionMessage.style.display = 'none';
+        }
+
+        // 更新当前队伍显示
+        function updateCurrentTeamDisplay() {
+            if (gameData.teams.length > 0 && gameData.currentTeamIndex !== -1) {
+                const currentTeam = gameData.teams[gameData.currentTeamIndex];
+                elements.currentTeamName.textContent = currentTeam.name;
+            } else {
+                elements.currentTeamName.textContent = '未选择';
+            }
+        }
+
+        // 选择队伍
+        function selectTeam(index) {
+            gameData.currentTeamIndex = index;
+            updateCurrentTeamDisplay();
+            updateTeamsList();
+            
+            // 如果有选中的队伍，启用开始游戏按钮
+            if (gameData.currentTeamIndex !== -1) {
+                elements.startGameBtn.disabled = false;
+            }
+        }
+
+        // 设置事件监听器
+        function setupEventListeners() {
+            // 添加队伍按钮
+            elements.addTeamBtn.addEventListener('click', function() {
+                const teamName = elements.teamNameInput.value.trim();
+                if (teamName && gameData.teams.length < 10) { // 限制最多10个队伍
+                    gameData.teams.push({
+                        id: Date.now(),
+                        name: teamName,
+                        score: 0
+                    });
+                    
+                    elements.teamNameInput.value = '';
+                    updateTeamsList();
+                    
+                    // 如果是第一个队伍，自动选中
+                    if (gameData.teams.length === 1) {
+                        selectTeam(0);
+                    }
+                }
+            });
+            
+            // 开始游戏按钮
+            elements.startGameBtn.addEventListener('click', function() {
+                if (gameData.currentTeamIndex === -1) {
+                    alert('请先选择一个队伍！');
+                    return;
+                }
+                
+                elements.teamSelection.style.display = 'none';
+                elements.gameContainer.style.display = 'block';
+                initGame();
+            });
+            
+            // 开始本轮按钮
+            elements.startBtn.addEventListener('click', startGame);
+            
+            // 检查匹配按钮
+            elements.checkBtn.addEventListener('click', checkMatches);
+            
+            // 下一轮按钮
+            elements.nextRoundBtn.addEventListener('click', nextRound);
+            
+            // 重置游戏按钮
+            elements.resetBtn.addEventListener('click', function() {
+                elements.teamSelection.style.display = 'block';
+                elements.gameContainer.style.display = 'none';
+            });
+            
+            // 再玩一次按钮
+            elements.playAgainBtn.addEventListener('click', function() {
+                elements.finalLeaderboardModal.style.display = 'none';
+                elements.teamSelection.style.display = 'block';
+                elements.gameContainer.style.display = 'none';
+            });
+            
+            // 规则选择
+            elements.ruleOptions.forEach(option => {
+                option.addEventListener('click', function() {
+                    gameData.currentRule = this.dataset.rule;
+                    updateUI();
+                    generateShapes();
+                    generateNumbers();
+                    updateMatchArea();
+                });
+            });
+            
+            // 拖拽事件
+            setupDragAndDrop();
+        }
+
+        // 更新队伍列表
+        function updateTeamsList() {
+            elements.teamsList.innerHTML = '';
+            
+            gameData.teams.forEach((team, index) => {
+                const teamTag = document.createElement('div');
+                teamTag.className = `team-tag ${index === gameData.currentTeamIndex ? 'selected' : ''}`;
+                
+                teamTag.innerHTML = `
+                    <span>${team.name}</span>
+                    <button class="select-team" data-index="${index}">选择</button>
+                    <button class="remove-team" data-index="${index}">×</button>
+                `;
+                
+                elements.teamsList.appendChild(teamTag);
+            });
+            
+            // 添加选择队伍的事件监听器
+            document.querySelectorAll('.select-team').forEach(button => {
+                button.addEventListener('click', function() {
+                    const index = parseInt(this.dataset.index);
+                    selectTeam(index);
+                });
+            });
+            
+            // 添加移除队伍的事件监听器
+            document.querySelectorAll('.remove-team').forEach(button => {
+                button.addEventListener('click', function() {
+                    const index = parseInt(this.dataset.index);
+                    gameData.teams.splice(index, 1);
+                    
+                    // 如果删除的是当前选中的队伍，重置选中状态
+                    if (index === gameData.currentTeamIndex) {
+                        gameData.currentTeamIndex = -1;
+                        elements.startGameBtn.disabled = true;
+                    } else if (index < gameData.currentTeamIndex) {
+                        // 如果删除的队伍在当前选中队伍之前，调整选中索引
+                        gameData.currentTeamIndex--;
+                    }
+                    
+                    updateTeamsList();
+                    updateCurrentTeamDisplay();
+                });
+            });
+        }
+
+        // 设置拖拽功能
+        function setupDragAndDrop() {
+            // 允许在匹配区域放置
+            elements.matchArea.addEventListener('dragover', function(e) {
+                e.preventDefault();
+            });
+            
+            // 处理放置
+            elements.matchArea.addEventListener('drop', function(e) {
+                e.preventDefault();
+                if (!gameData.isGameActive) return;
+                
+                const data = e.dataTransfer.getData('text/plain');
+                const [type, id] = data.split('-');
+                
+                if (type === 'shape') {
+                    // 如果拖拽的是图形，提示选择数字
+                    promptNumberSelection(parseInt(id));
+                } else if (type === 'number') {
+                    // 如果拖拽的是数字，提示选择图形
+                    promptShapeSelection(parseInt(id));
+                }
+            });
+            
+            // 为所有可拖拽元素设置拖拽开始事件
+            document.addEventListener('dragstart', function(e) {
+                if (e.target.classList.contains('item') && e.target.draggable) {
+                    const type = e.target.dataset.type;
+                    const id = e.target.dataset.id;
+                    e.dataTransfer.setData('text/plain', `${type}-${id}`);
+                    e.target.classList.add('dragging');
+                }
+            });
+            
+            document.addEventListener('dragend', function(e) {
+                if (e.target.classList.contains('item')) {
+                    e.target.classList.remove('dragging');
+                }
+            });
+        }
+
+        // 提示选择数字
+        function promptNumberSelection(shapeId) {
+            // 创建选择数字的模态框
+            const modal = document.createElement('div');
+            modal.className = 'modal';
+            modal.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background-color: rgba(0, 0, 0, 0.7);
+                z-index: 100;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            `;
+            
+            const modalContent = document.createElement('div');
+            modalContent.className = 'modal-content';
+            modalContent.style.cssText = `
+                background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+                padding: 30px;
+                border-radius: 15px;
+                max-width: 800px;
+                width: 95%;
+                text-align: center;
+                box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+                max-height: 80vh;
+                overflow-y: auto;
+            `;
+            
+            // 只显示未匹配的数字
+            const numbersToShow = getNumbersForCurrentRound().filter(num => 
+                !gameData.matchedNumberIds.includes(num.id)
+            );
+            
+            modalContent.innerHTML = `
+                <h2>选择匹配的数字</h2>
+                <p>请为图形选择一个匹配的数字：</p>
+                <div class="numbers-selection" style="display: flex; flex-wrap: wrap; gap: 15px; justify-content: center; margin: 20px 0;">
+                    ${numbersToShow.map(num => {
+                        let dotsHtml = '';
+                        for (let i = 0; i < num.dots; i++) {
+                            dotsHtml += '<div class="dot"></div>';
+                        }
+                        
+                        let propertiesHtml = '';
+                        if (gameData.currentRule === 'holes') {
+                            propertiesHtml = `<span class="property">圆点:${num.dots}</span>`;
+                        } else {
+                            propertiesHtml = `<span class="property">数字:${num.value}</span>`;
+                        }
+                        
+                        return `
+                        <div class="item number-option" data-id="${num.id}" style="cursor: pointer; width: 110px; height: 110px;">
+                            <div style="font-size: 1.8rem; font-weight: bold;">${num.value}</div>
+                            <div class="item-properties">
+                                ${propertiesHtml}
+                            </div>
+                            ${gameData.currentRule === 'holes' ? `<div class="dots-container">${dotsHtml}</div>` : ''}
+                        </div>
+                    `}).join('')}
+                </div>
+                <button id="cancel-selection" style="padding: 10px 20px; background: #F44336; color: white; border: none; border-radius: 5px; cursor: pointer;">取消</button>
+            `;
+            
+            modal.appendChild(modalContent);
+            document.body.appendChild(modal);
+            
+            // 添加数字选择事件
+            modal.querySelectorAll('.number-option').forEach(option => {
+                option.addEventListener('click', function() {
+                    const numberId = parseInt(this.dataset.id);
+                    createMatch(shapeId, numberId);
+                    document.body.removeChild(modal);
+                });
+            });
+            
+            // 取消选择
+            modal.querySelector('#cancel-selection').addEventListener('click', function() {
+                document.body.removeChild(modal);
+            });
+        }
+
+        // 提示选择图形
+        function promptShapeSelection(numberId) {
+            // 创建选择图形的模态框
+            const modal = document.createElement('div');
+            modal.className = 'modal';
+            modal.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background-color: rgba(0, 0, 0, 0.7);
+                z-index: 100;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            `;
+            
+            const modalContent = document.createElement('div');
+            modalContent.className = 'modal-content';
+            modalContent.style.cssText = `
+                background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+                padding: 30px;
+                border-radius: 15px;
+                max-width: 800px;
+                width: 95%;
+                text-align: center;
+                box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+                max-height: 80vh;
+                overflow-y: auto;
+            `;
+            
+            // 只显示未匹配的图形
+            const shapesToShow = getShapesForCurrentRound().filter(shape => 
+                !gameData.matchedShapeIds.includes(shape.id)
+            );
+            
+            modalContent.innerHTML = `
+                <h2>选择匹配的图形</h2>
+                <p>请为数字选择一个匹配的图形：</p>
+                <div class="shapes-selection" style="display: flex; flex-wrap: wrap; gap: 15px; justify-content: center; margin: 20px 0;">
+                    ${shapesToShow.map(shape => {
+                        let holesHtml = '';
+                        for (let i = 0; i < shape.holes; i++) {
+                            holesHtml += '<div class="hole"></div>';
+                        }
+                        
+                        let propertiesHtml = '';
+                        if (gameData.currentRule === 'holes') {
+                            propertiesHtml = `<span class="property">孔洞:${shape.holes}</span>`;
+                        } else {
+                            propertiesHtml = `<span class="property">边数:${shape.sides}</span>`;
+                        }
+                        
+                        return `
+                        <div class="item shape-option" data-id="${shape.id}" style="cursor: pointer; width: 110px; height: 110px;">
+                            <div class="shape-container" style="width: 65px; height: 65px;">
+                                <div class="shape ${shape.className}"></div>
+                                ${shape.holes > 0 ? `<div class="hole-${shape.holes}">${holesHtml}</div>` : ''}
+                            </div>
+                            <div class="item-properties">
+                                ${propertiesHtml}
+                            </div>
+                        </div>
+                    `}).join('')}
+                </div>
+                <button id="cancel-selection" style="padding: 10px 20px; background: #F44336; color: white; border: none; border-radius: 5px; cursor: pointer;">取消</button>
+            `;
+            
+            modal.appendChild(modalContent);
+            document.body.appendChild(modal);
+            
+            // 添加图形选择事件
+            modal.querySelectorAll('.shape-option').forEach(option => {
+                option.addEventListener('click', function() {
+                    const shapeId = parseInt(this.dataset.id);
+                    createMatch(shapeId, numberId);
+                    document.body.removeChild(modal);
+                });
+            });
+            
+            // 取消选择
+            modal.querySelector('#cancel-selection').addEventListener('click', function() {
+                document.body.removeChild(modal);
+            });
+        }
+
+        // 创建匹配
+        function createMatch(shapeId, numberId) {
+            // 检查是否已存在匹配
+            const existingMatch = gameData.currentMatches.find(
+                match => match.shapeId === shapeId || match.numberId === numberId
+            );
+            
+            if (existingMatch) {
+                alert('该图形或数字已经匹配过了！');
+                return;
+            }
+            
+            // 添加新匹配
+            gameData.currentMatches.push({
+                shapeId: shapeId,
+                numberId: numberId
+            });
+            
+            updateMatchArea();
+        }
+
+        // 检查匹配
+        function checkMatches() {
+            let correctMatches = 0;
+            let totalMatches = gameData.currentMatches.length;
+            
+            gameData.currentMatches.forEach(match => {
+                const shape = gameData.shapes.find(s => s.id === match.shapeId);
+                const number = gameData.numbers.find(n => n.id === match.numberId);
+                
+                if (shape && number) {
+                    let isCorrect = false;
+                    if (gameData.currentRule === 'holes') {
+                        isCorrect = shape.holes === number.dots;
+                    } else {
+                        isCorrect = shape.sides === number.value;
+                    }
+                    
+                    if (isCorrect) {
+                        correctMatches++;
+                        
+                        // 队伍得分累加
+                        gameData.teamScore += 10;
+                        
+                        // 添加到已匹配列表
+                        if (!gameData.matchedShapeIds.includes(shape.id)) {
+                            gameData.matchedShapeIds.push(shape.id);
+                        }
+                        if (!gameData.matchedNumberIds.includes(number.id)) {
+                            gameData.matchedNumberIds.push(number.id);
+                        }
+                    }
+                }
+            });
+            
+            // 更新得分显示
+            elements.teamScore.textContent = gameData.teamScore;
+            
+            // 重新生成图形和数字（已匹配的会变淡）
+            generateShapes();
+            generateNumbers();
+            
+            // 更新排行榜
+            updateLeaderboard();
+            
+            // 显示反馈
+            if (correctMatches === totalMatches && totalMatches > 0) {
+                elements.feedback.textContent = `太棒了！所有${totalMatches}个匹配都正确！获得${correctMatches * 10}分！`;
+                elements.feedback.className = 'feedback correct';
+            } else if (correctMatches > 0) {
+                elements.feedback.textContent = `有${correctMatches}个匹配正确，${totalMatches - correctMatches}个匹配错误。获得${correctMatches * 10}分！`;
+                elements.feedback.className = 'feedback correct';
+            } else if (totalMatches > 0) {
+                elements.feedback.textContent = '所有匹配都不正确，请检查规则再试一次！';
+                elements.feedback.className = 'feedback incorrect';
+            } else {
+                elements.feedback.textContent = '请先创建一些匹配！';
+                elements.feedback.className = 'feedback';
+            }
+            
+            // 检查是否完成所有匹配
+            if (checkCompletion()) {
+                elements.nextRoundBtn.disabled = false;
+            }
+            
+            // 清空当前匹配
+            gameData.currentMatches = [];
+            updateMatchArea();
+        }
+
+        // 初始化
+        function init() {
+            updateTeamsList();
+            updateCurrentTeamDisplay();
+            setupEventListeners();
+        }
+
+        // 页面加载完成后初始化
+        window.onload = init;
+    </script>
+</body>
+</html>
